@@ -1,0 +1,9 @@
+FROM golang:1.18-alpine
+
+RUN apk add --no-cache bash
+
+WORKDIR /app
+
+RUN go install github.com/githubnemo/CompileDaemon@latest
+
+CMD ["/bin/bash", "./build/package/watcher.sh"]

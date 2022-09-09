@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/sergalkin/gophkeeper/api/proto";
+
+message EmptyRequest {}
+
+message Response {
+    string msg = 1;
+}
+
+service GophKeeper {
+    rpc Hello (EmptyRequest) returns (Response);
+}
+
