@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os/signal"
 	"syscall"
 
@@ -11,8 +10,8 @@ import (
 
 	pb "github.com/sergalkin/gophkeeper/api/proto"
 	"github.com/sergalkin/gophkeeper/internal/client"
-	"github.com/sergalkin/gophkeeper/pkg"
-	"github.com/sergalkin/gophkeeper/pkg/utils"
+	"github.com/sergalkin/gophkeeper/pkg/cert"
+	"github.com/sergalkin/gophkeeper/pkg/logger"
 )
 
 func main() {
@@ -20,9 +19,9 @@ func main() {
 	defer cancel()
 
 	cfg := client.NewConfig()
-	logger := pkg.NewLogger()
+	logger := logger.NewLogger()
 
-	tlsCredential, err := utils.NewSSLConfigService().LoadClientCertificate(cfg)
+	tlsCredential, err := cert.NewSSLConfigService().LoadClientCertificate(cfg)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -32,9 +31,10 @@ func main() {
 		logger.Error(errConn.Error())
 	}
 
-	gRPCClient := pb.NewGophKeeperClient(conn)
+	gRPCClient := pb.NewUserClient(conn)
+
 	go func() {
-		fmt.Println(gRPCClient.Hello(ctx, &pb.EmptyRequest{}))
+		logger.Sugar().Info(gRPCClient.Register(ctx, &pb.RegisterRequest{}))
 	}()
 
 	releaseResources(ctx, conn, logger)
@@ -43,10 +43,11 @@ func main() {
 func releaseResources(ctx context.Context, conn *grpc.ClientConn, l *zap.Logger) {
 	<-ctx.Done()
 
-	err := conn.Close()
-	if err != nil {
+	if err := conn.Close(); err != nil {
 		l.Sugar().Errorf("error in closing gRPC client: %s", err.Error())
-	} else {
-		l.Info("gRPC client was successfully shut down")
+
+		return
 	}
+
+	l.Info("gRPC client was successfully shut down")
 }
