@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/caarlos0/env/v6"
 
-	"github.com/sergalkin/gophkeeper/pkg"
+	"github.com/sergalkin/gophkeeper/pkg/logger"
 )
 
 type Config struct {
@@ -23,8 +23,7 @@ func NewConfig() Config {
 }
 
 func (c *Config) parse() {
-	err := env.Parse(&cfg)
-	if err != nil {
-		pkg.NewLogger().Error(err.Error())
+	if err := env.Parse(&cfg); err != nil {
+		logger.NewLogger().Error(err.Error())
 	}
 }

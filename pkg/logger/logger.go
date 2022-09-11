@@ -1,7 +1,7 @@
-package pkg
+package logger
 
 import (
-	"fmt"
+	"log"
 	"sync"
 
 	"github.com/caarlos0/env/v6"
@@ -18,26 +18,32 @@ var (
 	once sync.Once
 )
 
+// NewLogger - is wrap up for creating Logger.
+//
+// Only first call of this function is actually creating an instance of  *zap.Logger, all other calls
+// returns already created instance of *zap.Logger.
+//
+// Realisation of Singleton pattern.
 func NewLogger() *zap.Logger {
 	once.Do(func() {
-		var l logger
+		var zlogger logger
 		var zlConfig zap.Config
 
-		err := env.Parse(&l)
+		err := env.Parse(&zlogger)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 		}
 
-		if l.IsProd == true {
+		if zlogger.IsProd {
 			zlConfig = zap.NewProductionConfig()
 		} else {
 			zlConfig = zap.NewDevelopmentConfig()
 		}
 
-		zlConfig.OutputPaths = []string{"stderr", l.LogPath}
+		zlConfig.OutputPaths = []string{"stderr", zlogger.LogPath}
 		zl, err = zlConfig.Build()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err.Error())
 		}
 	})
 
