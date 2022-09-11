@@ -12,6 +12,8 @@ type Config struct {
 
 	SSLCertPath string `env:"SSL_CERT_PATH" envDefault:"cert/localhost.crt"`
 	SSLKeyPath  string `env:"SSL_KEY_PATH" envDefault:"cert/localhost.key"`
+
+	DSN string `env:"DSN" envDefault:"postgresql://root:root@localhost:5432/gophkeeper?sslmode=disable"`
 }
 
 var cfg Config

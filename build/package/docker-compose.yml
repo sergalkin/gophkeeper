@@ -21,6 +21,7 @@ services:
       SERVER_ADDRESS: ${SERVER_ADDRESS}
       SERVER_PORT: ${SERVER_PORT}
       LOG_PATH: ${LOG_PATH}
+      DSN: ${DSN}
     ports:
       - 8080:${SERVER_PORT}
     volumes:
