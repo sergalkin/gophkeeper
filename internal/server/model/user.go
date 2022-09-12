@@ -7,7 +7,3 @@ type User struct {
 	Login    string    `json:"login"`
 	Password string    `json:"password"`
 }
-
-func (u *User) Identity() string {
-	return u.ID.String()
-}

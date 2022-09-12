@@ -8,5 +8,5 @@ import (
 
 type UserServerStorage interface {
 	Create(ctx context.Context, user model.User) (model.User, error)
-	GetByLoginAndPassword(ctx context.Context, login, password string) (user *model.User, err error)
+	GetByLoginAndPassword(ctx context.Context, user model.User) (model.User, error)
 }

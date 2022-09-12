@@ -10,7 +10,9 @@ import (
 	"github.com/sergalkin/gophkeeper/internal/server/config"
 	"github.com/sergalkin/gophkeeper/internal/server/service"
 	"github.com/sergalkin/gophkeeper/internal/server/storage/postgres"
+	"github.com/sergalkin/gophkeeper/pkg/jwt"
 	"github.com/sergalkin/gophkeeper/pkg/logger"
+	"github.com/sergalkin/gophkeeper/pkg/migrations"
 	"github.com/sergalkin/gophkeeper/pkg/server"
 )
 
@@ -33,16 +35,24 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("db ping: %w", err)
 	}
 
-	// TODO добавить миграции
-	// TODO добавить логирование запросов
+	jwtManager, errJwt := jwt.NewJWT(cfg.JWTSecret, cfg.JWTExp)
+	if err != nil {
+		log.Info(errJwt.Error())
+	}
+
+	migrationManager := migrations.NewMigrationManager(cfg)
+	err = migrationManager.Up()
+	if err != nil {
+		return nil, fmt.Errorf("migration error: %w", err)
+	}
+
 	// TODO посмотреть про интерцепторы? Мидлы?
-	// TODO написать логику сохранения пользователя в БД
-	// TODO написать логику логина
-	// TODO JWT
 	// TODO валидацию данных введеных от пользователя
-	// TODO шифрование пароля
+	// TODO логирование запросов
+	// TODO прокидывание токена между клиентом и сервером через ctx?
+	// TODO добавить логирование запросов?
 	usersStorage := postgres.NewPostgresUserStorage(dbConn)
-	usersGrpcService := service.NewUserGrpc(usersStorage)
+	usersGrpcService := service.NewUserGrpc(usersStorage, jwtManager)
 
 	gRPCServer := server.NewGrpcServer(
 		server.WithServerConfig(cfg),
