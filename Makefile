@@ -18,11 +18,11 @@ proto:
 
 #example: make migrate-create name=users
 migrate-create:
-	migrate create -ext sql -dir internal/migrations -seq $(name)
+	migrate create -ext sql -dir internal/server/migrations -seq $(name)
 
 #example: make migrate type=up
 migrate:
-	migrate -path internal/migrations -database "postgresql://root:root@localhost:5432/gophkeeper?sslmode=disable" -verbose $(type)
+	migrate -path internal/server/migrations -database "postgresql://root:root@localhost:5432/gophkeeper?sslmode=disable" -verbose $(type)
 
 # example: make release V=0.0.0
 release:
