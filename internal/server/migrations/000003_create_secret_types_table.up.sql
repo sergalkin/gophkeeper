@@ -4,7 +4,7 @@ create table secret_types
     title text not null
 );
 
-insert into types (title)
+insert into secret_types (title)
 values ('login/pass'),
        ('text'),
        ('binary'),
