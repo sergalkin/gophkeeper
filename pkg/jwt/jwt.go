@@ -47,7 +47,6 @@ func (j *JWT) Issue(id string) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(exp),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			Subject:   "somebody",
 			ID:        id,
 		},
 	}
