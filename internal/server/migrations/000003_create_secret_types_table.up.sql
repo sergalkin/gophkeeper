@@ -1,4 +1,4 @@
-create table types
+create table secret_types
 (
     id    bigserial primary key,
     title text not null

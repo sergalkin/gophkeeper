@@ -6,6 +6,7 @@ create table secrets
     title      text      not null,
     content    bytea     not null,
     created_at TIMESTAMPTZ default now(),
+    updated_at TIMESTAMPTZ default now(),
     deleted_at TIMESTAMPTZ default null,
 
     constraint fk_type_id foreign key (type_id) references types (id) on delete cascade,
