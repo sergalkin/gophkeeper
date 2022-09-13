@@ -46,18 +46,21 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("migration error: %w", err)
 	}
 
+	// TODO добавить проверку на наличие jwt валидного токена при получении списка типов секретов
 	// TODO посмотреть про интерцепторы? Мидлы?
 	// TODO валидацию данных введеных от пользователя
-	// TODO логирование запросов
 	// TODO прокидывание токена между клиентом и сервером через ctx?
 	// TODO добавить логирование запросов?
 	usersStorage := postgres.NewPostgresUserStorage(dbConn)
 	usersGrpcService := service.NewUserGrpc(usersStorage, jwtManager)
 
+	secretTypeStorage := postgres.NewPostgresSecretTypeStorage(dbConn)
+	secretTypeGrpcService := service.NewSecretTypeGrpc(secretTypeStorage, jwtManager)
+
 	gRPCServer := server.NewGrpcServer(
 		server.WithServerConfig(cfg),
 		server.WithLogger(log),
-		server.WithServices(usersGrpcService),
+		server.WithServices(usersGrpcService, secretTypeGrpcService),
 	)
 
 	return &App{
