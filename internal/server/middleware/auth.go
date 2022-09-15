@@ -11,6 +11,9 @@ import (
 	"github.com/sergalkin/gophkeeper/pkg/jwt"
 )
 
+// JwtTokenCtx - a unique type to avoid collisions.
+type JwtTokenCtx struct{}
+
 type AuthMiddleware struct {
 	jwtManager         jwt.Manager
 	unProtectedMethods []string
@@ -24,8 +27,12 @@ func NewAuthMiddleware(j jwt.Manager) *AuthMiddleware {
 	}
 }
 
-// JwtAuth - a jwt middleware that validates that current requested method can be accessed only by authorized users
-// and then checks that bearer token in authorization header is present and is valid jwt token.
+// JwtAuth - middleware function for validation user JwtToken.
+//
+// It extracts and decodes bearer token from context.
+//
+// On successful decode it attaches decoded token to context with new value with JwtTokenCtx.
+// On failure attempt returns codes.Unauthenticated status.
 func (a *AuthMiddleware) JwtAuth(ctx context.Context) (context.Context, error) {
 	if a.isSkippingCurrentRoute(ctx) {
 		return ctx, nil
@@ -41,15 +48,13 @@ func (a *AuthMiddleware) JwtAuth(ctx context.Context) (context.Context, error) {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid auth token: %v", errDecode)
 	}
 
-	newCtx := context.WithValue(ctx, "token", decodedToken)
+	newCtx := context.WithValue(ctx, JwtTokenCtx{}, decodedToken)
 
 	return newCtx, nil
 }
 
-// isSkippingCurrentRoute - is helper function for checking that current requested method is closed by authorized only
-// users.
-//
-// If requested method is protected by authorization than returns false, otherwise returns true.
+// isSkippingCurrentRoute - helper function for validating that extracted name of currently requested grpc.Method
+// from context is in list of unprotected AuthMiddleware a methods.
 func (a *AuthMiddleware) isSkippingCurrentRoute(ctx context.Context) bool {
 	isSkipping := false
 
