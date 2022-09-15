@@ -26,6 +26,7 @@ func NewConfig() Config {
 	return cfg
 }
 
+// parse - is a function that parses env to Config.
 func (c *Config) parse() {
 	if err := env.Parse(&cfg); err != nil {
 		logger.NewLogger().Error(err.Error())

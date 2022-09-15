@@ -23,10 +23,12 @@ const (
 	GetSecretTypeList = `SELECT id, title FROM secret_types`
 )
 
+// NewPostgresSecretTypeStorage - creates a postgres storage for secret types.
 func NewPostgresSecretTypeStorage(c *pgx.Conn) *secretTypePostgresStorage {
 	return &secretTypePostgresStorage{conn: c}
 }
 
+// GetSecretTypes - returns list of all available secret types.
 func (s *secretTypePostgresStorage) GetSecretTypes(ctx context.Context) ([]model.SecretType, error) {
 	var list []model.SecretType
 

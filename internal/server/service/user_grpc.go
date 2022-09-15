@@ -65,7 +65,7 @@ func (u *userGrpc) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.Re
 	return &pb.RegisterResponse{Token: token}, nil
 }
 
-// Login - authorizes user by provided login and password and returns JwtToken on success.
+// Login - Will return JwtToken on successful authentication via provided login and password.
 func (u *userGrpc) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	userModel, err := u.storage.GetByLoginAndPassword(ctx, model.User{Login: in.Login, Password: in.Password})
 
