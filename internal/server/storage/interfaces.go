@@ -19,4 +19,6 @@ type SecretTypeServerStorage interface {
 }
 
 type SecretServerStorage interface {
+	CreateSecret(ctx context.Context) (model.Secret, error)
+	GetSecret(ctx context.Context, secret model.Secret) (model.Secret, error)
 }

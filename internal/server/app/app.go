@@ -63,6 +63,9 @@ func NewApp(ctx context.Context) (*App, error) {
 	secretTypeStorage := postgres.NewPostgresSecretTypeStorage(dbConn)
 	secretTypeGrpcService := service.NewSecretTypeGrpc(secretTypeStorage)
 
+	secretStorage := postgres.NewSecretPostgresStorage(dbConn)
+	secretGrpcService := service.NewSecretGrpc(secretStorage)
+
 	//TODO добавление секретов
 
 	jwtAuthMiddleware := auth.NewJwtMiddleware(jwtManager, cr).Auth
@@ -70,7 +73,7 @@ func NewApp(ctx context.Context) (*App, error) {
 	gRPCServer := server.NewGrpcServer(
 		server.WithServerConfig(cfg),
 		server.WithLogger(log),
-		server.WithServices(usersGrpcService, secretTypeGrpcService),
+		server.WithServices(usersGrpcService, secretTypeGrpcService, secretGrpcService),
 		server.WithStreamInterceptors(
 			grpczap.StreamServerInterceptor(log),
 			grpcauth.StreamServerInterceptor(jwtAuthMiddleware),
