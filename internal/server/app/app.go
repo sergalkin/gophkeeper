@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	grpcauth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	grpczap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/jackc/pgx/v4"
 	"go.uber.org/zap"
 
 	"github.com/sergalkin/gophkeeper/internal/server/config"
+	"github.com/sergalkin/gophkeeper/internal/server/middleware"
 	"github.com/sergalkin/gophkeeper/internal/server/service"
 	"github.com/sergalkin/gophkeeper/internal/server/storage/postgres"
 	"github.com/sergalkin/gophkeeper/pkg/jwt"
@@ -22,6 +26,7 @@ type App struct {
 	Logger *zap.Logger
 }
 
+// NewApp - creates new App.
 func NewApp(ctx context.Context) (*App, error) {
 	cfg := config.NewConfig()
 	log := logger.NewLogger()
@@ -46,21 +51,28 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("migration error: %w", err)
 	}
 
-	// TODO добавить проверку на наличие jwt валидного токена при получении списка типов секретов
-	// TODO посмотреть про интерцепторы? Мидлы?
-	// TODO валидацию данных введеных от пользователя
-	// TODO прокидывание токена между клиентом и сервером через ctx?
-	// TODO добавить логирование запросов?
 	usersStorage := postgres.NewPostgresUserStorage(dbConn)
 	usersGrpcService := service.NewUserGrpc(usersStorage, jwtManager)
 
 	secretTypeStorage := postgres.NewPostgresSecretTypeStorage(dbConn)
-	secretTypeGrpcService := service.NewSecretTypeGrpc(secretTypeStorage, jwtManager)
+	secretTypeGrpcService := service.NewSecretTypeGrpc(secretTypeStorage)
+
+	jwtAuthMiddleware := middleware.NewAuthMiddleware(jwtManager).JwtAuth
 
 	gRPCServer := server.NewGrpcServer(
 		server.WithServerConfig(cfg),
 		server.WithLogger(log),
 		server.WithServices(usersGrpcService, secretTypeGrpcService),
+		server.WithStreamInterceptors(
+			grpczap.StreamServerInterceptor(log),
+			grpcauth.StreamServerInterceptor(jwtAuthMiddleware),
+			grpcrecovery.StreamServerInterceptor(),
+		),
+		server.WithUnaryInterceptors(
+			grpczap.UnaryServerInterceptor(log),
+			grpcauth.UnaryServerInterceptor(jwtAuthMiddleware),
+			grpcrecovery.UnaryServerInterceptor(),
+		),
 	)
 
 	return &App{

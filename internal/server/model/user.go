@@ -4,6 +4,6 @@ import "github.com/google/uuid"
 
 type User struct {
 	ID       uuid.UUID `json:"id"`
-	Login    string    `json:"login"`
-	Password string    `json:"-"`
+	Login    string    `json:"login" validate:"gte=3"`
+	Password string    `json:"-" validate:"gte=3"`
 }

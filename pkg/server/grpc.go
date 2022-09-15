@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
@@ -17,10 +18,12 @@ type Service interface {
 }
 
 type GrpcServer struct {
-	cfg      config.Config
-	logger   *zap.Logger
-	server   *grpc.Server
-	services []Service
+	cfg                config.Config
+	logger             *zap.Logger
+	server             *grpc.Server
+	services           []Service
+	unaryInterceptors  []grpc.UnaryServerInterceptor
+	streamInterceptors []grpc.StreamServerInterceptor
 }
 
 // GrpcServerOption - is callback function that applies an option to GrpcServer.
@@ -44,6 +47,20 @@ func WithLogger(z *zap.Logger) GrpcServerOption {
 func WithServices(s ...Service) GrpcServerOption {
 	return func(server *GrpcServer) {
 		server.services = s
+	}
+}
+
+// WithStreamInterceptors - add []grpc.StreamServerInterceptor to GrpcServer.
+func WithStreamInterceptors(in ...grpc.StreamServerInterceptor) GrpcServerOption {
+	return func(server *GrpcServer) {
+		server.streamInterceptors = append(server.streamInterceptors, in...)
+	}
+}
+
+// WithUnaryInterceptors - add []grpc.UnaryServerInterceptor to GrpcServer.
+func WithUnaryInterceptors(in ...grpc.UnaryServerInterceptor) GrpcServerOption {
+	return func(server *GrpcServer) {
+		server.unaryInterceptors = append(server.unaryInterceptors, in...)
 	}
 }
 
@@ -75,7 +92,15 @@ func (s *GrpcServer) Start(cancel context.CancelFunc) {
 		s.logger.Error(errListen.Error())
 	}
 
-	s.server = grpc.NewServer()
+	s.server = grpc.NewServer(
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			s.streamInterceptors...,
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			s.unaryInterceptors...,
+		)),
+	)
+
 	s.RegisterServices(s.services...)
 
 	go func() {

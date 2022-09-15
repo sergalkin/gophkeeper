@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,6 +23,7 @@ type userGrpc struct {
 	jwtManager jwt.Manager
 }
 
+// NewUserGrpc - creates new user grpc service.
 func NewUserGrpc(s storage.UserServerStorage, m jwt.Manager) *userGrpc {
 	return &userGrpc{
 		storage:    s,
@@ -29,12 +31,23 @@ func NewUserGrpc(s storage.UserServerStorage, m jwt.Manager) *userGrpc {
 	}
 }
 
+// RegisterService - registers service via grpc server.
 func (u *userGrpc) RegisterService(r grpc.ServiceRegistrar) {
 	pb.RegisterUserServer(r, u)
 }
 
+// Register - registers a new user.
+//
+//On successful creation returns JwtToken.
 func (u *userGrpc) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	userModel, err := u.storage.Create(ctx, model.User{Login: in.Login, Password: in.Password})
+	m := model.User{Login: in.Login, Password: in.Password}
+
+	validate := validator.New()
+	if errV := validate.Struct(m); errV != nil {
+		return nil, status.Error(codes.InvalidArgument, errV.Error())
+	}
+
+	userModel, err := u.storage.Create(ctx, m)
 
 	if errors.Is(err, apperr.ErrConflict) {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -52,6 +65,7 @@ func (u *userGrpc) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.Re
 	return &pb.RegisterResponse{Token: token}, nil
 }
 
+// Login - authorizes user by provided login and password and returns JwtToken on success.
 func (u *userGrpc) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	userModel, err := u.storage.GetByLoginAndPassword(ctx, model.User{Login: in.Login, Password: in.Password})
 

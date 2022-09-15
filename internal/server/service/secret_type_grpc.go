@@ -9,24 +9,27 @@ import (
 
 	pb "github.com/sergalkin/gophkeeper/api/proto"
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
-	"github.com/sergalkin/gophkeeper/pkg/jwt"
 )
 
 type secretTypeGrpc struct {
 	pb.UnimplementedSecretServer
 
 	storage storage.SecretTypeServerStorage
-	jwt     jwt.Manager
 }
 
-func NewSecretTypeGrpc(s storage.SecretTypeServerStorage, j jwt.Manager) *secretTypeGrpc {
-	return &secretTypeGrpc{storage: s, jwt: j}
+// NewSecretTypeGrpc - creates new secret type grpc service.
+func NewSecretTypeGrpc(s storage.SecretTypeServerStorage) *secretTypeGrpc {
+	return &secretTypeGrpc{storage: s}
 }
 
+// RegisterService - registers service via grpc server.
 func (s *secretTypeGrpc) RegisterService(r grpc.ServiceRegistrar) {
 	pb.RegisterSecretServer(r, s)
 }
 
+// GetSecretTypesList - returns list of secret types.
+//
+// Can be accessed only by authorized users.
 func (s *secretTypeGrpc) GetSecretTypesList(
 	ctx context.Context, in *pb.SecretTypesListRequest,
 ) (*pb.SecretTypesListResponse, error) {

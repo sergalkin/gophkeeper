@@ -68,7 +68,7 @@ func (j *JWT) Decode(decode string) (string, error) {
 		return "", jwt.ErrTokenInvalidClaims
 	}
 
-	return "", nil
+	return payload.ID, nil
 }
 
 // parseKey - validates token signing method and alg, then return JWT.key.
