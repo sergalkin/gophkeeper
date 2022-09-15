@@ -12,7 +12,7 @@ import (
 )
 
 type secretTypeGrpc struct {
-	pb.UnimplementedSecretServer
+	pb.UnimplementedSecretTypeServer
 
 	storage storage.SecretTypeServerStorage
 }
@@ -24,7 +24,7 @@ func NewSecretTypeGrpc(s storage.SecretTypeServerStorage) *secretTypeGrpc {
 
 // RegisterService - registers service via grpc server.
 func (s *secretTypeGrpc) RegisterService(r grpc.ServiceRegistrar) {
-	pb.RegisterSecretServer(r, s)
+	pb.RegisterSecretTypeServer(r, s)
 }
 
 // GetSecretTypesList - returns list of secret types.
@@ -40,7 +40,7 @@ func (s *secretTypeGrpc) GetSecretTypesList(
 
 	resp := &pb.SecretTypesListResponse{}
 	for _, secret := range list {
-		resp.Secrets = append(resp.Secrets, &pb.SecretType{
+		resp.Secrets = append(resp.Secrets, &pb.Type{
 			Id:    uint32(secret.ID),
 			Title: secret.Title,
 		})

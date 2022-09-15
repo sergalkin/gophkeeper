@@ -18,86 +18,86 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// SecretClient is the client API for Secret service.
+// SecretTypeClient is the client API for SecretType service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type SecretClient interface {
+type SecretTypeClient interface {
 	GetSecretTypesList(ctx context.Context, in *SecretTypesListRequest, opts ...grpc.CallOption) (*SecretTypesListResponse, error)
 }
 
-type secretClient struct {
+type secretTypeClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewSecretClient(cc grpc.ClientConnInterface) SecretClient {
-	return &secretClient{cc}
+func NewSecretTypeClient(cc grpc.ClientConnInterface) SecretTypeClient {
+	return &secretTypeClient{cc}
 }
 
-func (c *secretClient) GetSecretTypesList(ctx context.Context, in *SecretTypesListRequest, opts ...grpc.CallOption) (*SecretTypesListResponse, error) {
+func (c *secretTypeClient) GetSecretTypesList(ctx context.Context, in *SecretTypesListRequest, opts ...grpc.CallOption) (*SecretTypesListResponse, error) {
 	out := new(SecretTypesListResponse)
-	err := c.cc.Invoke(ctx, "/proto.Secret/GetSecretTypesList", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.SecretType/GetSecretTypesList", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// SecretServer is the server API for Secret service.
-// All implementations must embed UnimplementedSecretServer
+// SecretTypeServer is the server API for SecretType service.
+// All implementations must embed UnimplementedSecretTypeServer
 // for forward compatibility
-type SecretServer interface {
+type SecretTypeServer interface {
 	GetSecretTypesList(context.Context, *SecretTypesListRequest) (*SecretTypesListResponse, error)
-	mustEmbedUnimplementedSecretServer()
+	mustEmbedUnimplementedSecretTypeServer()
 }
 
-// UnimplementedSecretServer must be embedded to have forward compatible implementations.
-type UnimplementedSecretServer struct {
+// UnimplementedSecretTypeServer must be embedded to have forward compatible implementations.
+type UnimplementedSecretTypeServer struct {
 }
 
-func (UnimplementedSecretServer) GetSecretTypesList(context.Context, *SecretTypesListRequest) (*SecretTypesListResponse, error) {
+func (UnimplementedSecretTypeServer) GetSecretTypesList(context.Context, *SecretTypesListRequest) (*SecretTypesListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSecretTypesList not implemented")
 }
-func (UnimplementedSecretServer) mustEmbedUnimplementedSecretServer() {}
+func (UnimplementedSecretTypeServer) mustEmbedUnimplementedSecretTypeServer() {}
 
-// UnsafeSecretServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to SecretServer will
+// UnsafeSecretTypeServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SecretTypeServer will
 // result in compilation errors.
-type UnsafeSecretServer interface {
-	mustEmbedUnimplementedSecretServer()
+type UnsafeSecretTypeServer interface {
+	mustEmbedUnimplementedSecretTypeServer()
 }
 
-func RegisterSecretServer(s grpc.ServiceRegistrar, srv SecretServer) {
-	s.RegisterService(&Secret_ServiceDesc, srv)
+func RegisterSecretTypeServer(s grpc.ServiceRegistrar, srv SecretTypeServer) {
+	s.RegisterService(&SecretType_ServiceDesc, srv)
 }
 
-func _Secret_GetSecretTypesList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SecretType_GetSecretTypesList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SecretTypesListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SecretServer).GetSecretTypesList(ctx, in)
+		return srv.(SecretTypeServer).GetSecretTypesList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.Secret/GetSecretTypesList",
+		FullMethod: "/proto.SecretType/GetSecretTypesList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SecretServer).GetSecretTypesList(ctx, req.(*SecretTypesListRequest))
+		return srv.(SecretTypeServer).GetSecretTypesList(ctx, req.(*SecretTypesListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Secret_ServiceDesc is the grpc.ServiceDesc for Secret service.
+// SecretType_ServiceDesc is the grpc.ServiceDesc for SecretType service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Secret_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.Secret",
-	HandlerType: (*SecretServer)(nil),
+var SecretType_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.SecretType",
+	HandlerType: (*SecretTypeServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetSecretTypesList",
-			Handler:    _Secret_GetSecretTypesList_Handler,
+			Handler:    _SecretType_GetSecretTypesList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
