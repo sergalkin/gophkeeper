@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/sergalkin/gophkeeper/pkg/crypt"
 	"github.com/sergalkin/gophkeeper/pkg/jwt"
 )
 
@@ -17,12 +18,14 @@ type JwtTokenCtx struct{}
 type AuthMiddleware struct {
 	jwtManager         jwt.Manager
 	unProtectedMethods []string
+	crypter            crypt.Crypter
 }
 
 // NewAuthMiddleware - creates AuthMiddleware.
-func NewAuthMiddleware(j jwt.Manager) *AuthMiddleware {
+func NewAuthMiddleware(j jwt.Manager, c crypt.Crypter) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtManager:         j,
+		crypter:            c,
 		unProtectedMethods: []string{"/proto.User/Register", "/proto.User/Login"},
 	}
 }
@@ -38,9 +41,14 @@ func (a *AuthMiddleware) JwtAuth(ctx context.Context) (context.Context, error) {
 		return ctx, nil
 	}
 
-	token, err := grpcauth.AuthFromMD(ctx, "bearer")
+	encToken, err := grpcauth.AuthFromMD(ctx, "bearer")
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Unauthenticated, "bearer could not be retrieved: %v", err)
+	}
+
+	token, errCrypter := a.crypter.Decode(encToken)
+	if errCrypter != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "crypter decoding error: %v", errCrypter)
 	}
 
 	decodedToken, errDecode := a.jwtManager.Decode(token)

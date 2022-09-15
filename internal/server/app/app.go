@@ -14,6 +14,7 @@ import (
 	"github.com/sergalkin/gophkeeper/internal/server/middleware"
 	"github.com/sergalkin/gophkeeper/internal/server/service"
 	"github.com/sergalkin/gophkeeper/internal/server/storage/postgres"
+	"github.com/sergalkin/gophkeeper/pkg/crypt"
 	"github.com/sergalkin/gophkeeper/pkg/jwt"
 	"github.com/sergalkin/gophkeeper/pkg/logger"
 	"github.com/sergalkin/gophkeeper/pkg/migrations"
@@ -31,6 +32,11 @@ func NewApp(ctx context.Context) (*App, error) {
 	cfg := config.NewConfig()
 	log := logger.NewLogger()
 
+	cr, errCr := crypt.NewCrypt()
+	if errCr != nil {
+		return nil, fmt.Errorf("crypt creating error: %w", errCr)
+	}
+
 	dbConn, err := pgx.Connect(ctx, cfg.DSN)
 	if err != nil {
 		return nil, fmt.Errorf("db open: %w", err)
@@ -41,8 +47,8 @@ func NewApp(ctx context.Context) (*App, error) {
 	}
 
 	jwtManager, errJwt := jwt.NewJWT(cfg.JWTSecret, cfg.JWTExp)
-	if err != nil {
-		log.Info(errJwt.Error())
+	if errJwt != nil {
+		return nil, fmt.Errorf("jwtManager creating error: %w", errJwt)
 	}
 
 	migrationManager := migrations.NewMigrationManager(cfg)
@@ -52,12 +58,14 @@ func NewApp(ctx context.Context) (*App, error) {
 	}
 
 	usersStorage := postgres.NewPostgresUserStorage(dbConn)
-	usersGrpcService := service.NewUserGrpc(usersStorage, jwtManager)
+	usersGrpcService := service.NewUserGrpc(usersStorage, jwtManager, cr)
 
 	secretTypeStorage := postgres.NewPostgresSecretTypeStorage(dbConn)
 	secretTypeGrpcService := service.NewSecretTypeGrpc(secretTypeStorage)
 
-	jwtAuthMiddleware := middleware.NewAuthMiddleware(jwtManager).JwtAuth
+	//TODO добавление секретов
+
+	jwtAuthMiddleware := middleware.NewAuthMiddleware(jwtManager, cr).JwtAuth
 
 	gRPCServer := server.NewGrpcServer(
 		server.WithServerConfig(cfg),

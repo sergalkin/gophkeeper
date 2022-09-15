@@ -13,6 +13,7 @@ import (
 	"github.com/sergalkin/gophkeeper/internal/server/model"
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
 	"github.com/sergalkin/gophkeeper/pkg/apperr"
+	"github.com/sergalkin/gophkeeper/pkg/crypt"
 	"github.com/sergalkin/gophkeeper/pkg/jwt"
 )
 
@@ -21,13 +22,15 @@ type userGrpc struct {
 
 	storage    storage.UserServerStorage
 	jwtManager jwt.Manager
+	crypter    crypt.Crypter
 }
 
 // NewUserGrpc - creates new user grpc service.
-func NewUserGrpc(s storage.UserServerStorage, m jwt.Manager) *userGrpc {
+func NewUserGrpc(s storage.UserServerStorage, m jwt.Manager, c crypt.Crypter) *userGrpc {
 	return &userGrpc{
 		storage:    s,
 		jwtManager: m,
+		crypter:    c,
 	}
 }
 
@@ -62,7 +65,7 @@ func (u *userGrpc) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.Re
 		return nil, status.Error(codes.Internal, errToken.Error())
 	}
 
-	return &pb.RegisterResponse{Token: token}, nil
+	return &pb.RegisterResponse{Token: u.crypter.Encode(token)}, nil
 }
 
 // Login - Will return JwtToken on successful authentication via provided login and password.
@@ -82,5 +85,5 @@ func (u *userGrpc) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginRes
 		return nil, status.Error(codes.Internal, errToken.Error())
 	}
 
-	return &pb.LoginResponse{Token: token}, nil
+	return &pb.LoginResponse{Token: u.crypter.Encode(token)}, nil
 }
