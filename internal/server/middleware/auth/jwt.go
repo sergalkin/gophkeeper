@@ -1,4 +1,4 @@
-package middleware
+package auth
 
 import (
 	"context"
@@ -15,28 +15,30 @@ import (
 // JwtTokenCtx - a unique type to avoid collisions.
 type JwtTokenCtx struct{}
 
-type AuthMiddleware struct {
+var _ Auther = (*JwtMiddleware)(nil)
+
+type JwtMiddleware struct {
 	jwtManager         jwt.Manager
 	unProtectedMethods []string
 	crypter            crypt.Crypter
 }
 
-// NewAuthMiddleware - creates AuthMiddleware.
-func NewAuthMiddleware(j jwt.Manager, c crypt.Crypter) *AuthMiddleware {
-	return &AuthMiddleware{
+// NewJwtMiddleware - creates JwtMiddleware.
+func NewJwtMiddleware(j jwt.Manager, c crypt.Crypter) *JwtMiddleware {
+	return &JwtMiddleware{
 		jwtManager:         j,
 		crypter:            c,
 		unProtectedMethods: []string{"/proto.User/Register", "/proto.User/Login"},
 	}
 }
 
-// JwtAuth - middleware function for validation user JwtToken.
+// Auth - middleware function for validation user JwtToken.
 //
 // It extracts and decodes bearer token from context.
 //
 // On successful decode it attaches decoded token to context with new value with JwtTokenCtx.
 // On failure attempt returns codes.Unauthenticated status.
-func (a *AuthMiddleware) JwtAuth(ctx context.Context) (context.Context, error) {
+func (a *JwtMiddleware) Auth(ctx context.Context) (context.Context, error) {
 	if a.isSkippingCurrentRoute(ctx) {
 		return ctx, nil
 	}
@@ -62,8 +64,8 @@ func (a *AuthMiddleware) JwtAuth(ctx context.Context) (context.Context, error) {
 }
 
 // isSkippingCurrentRoute - helper function for validating that extracted name of currently requested grpc.Method
-// from context is in list of unprotected AuthMiddleware a methods.
-func (a *AuthMiddleware) isSkippingCurrentRoute(ctx context.Context) bool {
+// from context is in list of unprotected JwtMiddleware a methods.
+func (a *JwtMiddleware) isSkippingCurrentRoute(ctx context.Context) bool {
 	isSkipping := false
 
 	calledMethod, _ := grpc.Method(ctx)

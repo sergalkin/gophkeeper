@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/sergalkin/gophkeeper/internal/server/config"
-	"github.com/sergalkin/gophkeeper/internal/server/middleware"
+	"github.com/sergalkin/gophkeeper/internal/server/middleware/auth"
 	"github.com/sergalkin/gophkeeper/internal/server/service"
 	"github.com/sergalkin/gophkeeper/internal/server/storage/postgres"
 	"github.com/sergalkin/gophkeeper/pkg/crypt"
@@ -65,7 +65,7 @@ func NewApp(ctx context.Context) (*App, error) {
 
 	//TODO добавление секретов
 
-	jwtAuthMiddleware := middleware.NewAuthMiddleware(jwtManager, cr).JwtAuth
+	jwtAuthMiddleware := auth.NewJwtMiddleware(jwtManager, cr).Auth
 
 	gRPCServer := server.NewGrpcServer(
 		server.WithServerConfig(cfg),
