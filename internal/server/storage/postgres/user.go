@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
@@ -32,7 +33,10 @@ func NewPostgresUserStorage(c *pgx.Conn) *userPostgresStorage {
 // Create - creates a user record in DB with data provided from model.User, then returns model.User populated with
 // user id from database.
 func (u userPostgresStorage) Create(ctx context.Context, user model.User) (model.User, error) {
-	err := u.conn.QueryRow(ctx, CreateUser, user.Login, user.Password).Scan(&user.ID)
+	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	err := u.conn.QueryRow(ctxWithTimeOut, CreateUser, user.Login, user.Password).Scan(&user.ID)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			if pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
@@ -49,7 +53,10 @@ func (u userPostgresStorage) Create(ctx context.Context, user model.User) (model
 // GetByLoginAndPassword - searches DB with provided model.User, if record is found, then populates model.User with
 // user id from database.
 func (u userPostgresStorage) GetByLoginAndPassword(ctx context.Context, user model.User) (model.User, error) {
-	err := u.conn.QueryRow(ctx, GetUserId, user.Login, user.Password).Scan(&user.ID)
+	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	err := u.conn.QueryRow(ctxWithTimeOut, GetUserId, user.Login, user.Password).Scan(&user.ID)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			if pgerrcode.IsNoData(pgErr.Code) {
