@@ -50,6 +50,21 @@ func (mr *MockUserServerStorageMockRecorder) Create(ctx, user interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserServerStorage)(nil).Create), ctx, user)
 }
 
+// DeleteUser mocks base method.
+func (m *MockUserServerStorage) DeleteUser(ctx context.Context, user model.User) (model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUser", ctx, user)
+	ret0, _ := ret[0].(model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteUser indicates an expected call of DeleteUser.
+func (mr *MockUserServerStorageMockRecorder) DeleteUser(ctx, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserServerStorage)(nil).DeleteUser), ctx, user)
+}
+
 // GetByLoginAndPassword mocks base method.
 func (m *MockUserServerStorage) GetByLoginAndPassword(ctx context.Context, user model.User) (model.User, error) {
 	m.ctrl.T.Helper()
@@ -139,6 +154,21 @@ func (m *MockSecretServerStorage) CreateSecret(ctx context.Context, secret model
 func (mr *MockSecretServerStorageMockRecorder) CreateSecret(ctx, secret interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSecret", reflect.TypeOf((*MockSecretServerStorage)(nil).CreateSecret), ctx, secret)
+}
+
+// DeleteSecret mocks base method.
+func (m *MockSecretServerStorage) DeleteSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSecret", ctx, secret)
+	ret0, _ := ret[0].(model.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSecret indicates an expected call of DeleteSecret.
+func (mr *MockSecretServerStorageMockRecorder) DeleteSecret(ctx, secret interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSecret", reflect.TypeOf((*MockSecretServerStorage)(nil).DeleteSecret), ctx, secret)
 }
 
 // GetSecret mocks base method.

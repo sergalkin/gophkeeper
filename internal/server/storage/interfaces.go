@@ -22,6 +22,10 @@ type SecretTypeServerStorage interface {
 }
 
 type SecretServerStorage interface {
+	// CreateSecret - creates new model.Secret in storage.
 	CreateSecret(ctx context.Context, secret model.Secret) (model.Secret, error)
+	// GetSecret - gets a model.Secret from storage.
 	GetSecret(ctx context.Context, secret model.Secret) (model.Secret, error)
+	// DeleteSecret - deletes a model.Secret from storage.
+	DeleteSecret(ctx context.Context, secret model.Secret) (model.Secret, error)
 }

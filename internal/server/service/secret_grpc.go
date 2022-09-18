@@ -104,3 +104,20 @@ func (s *secretGrpc) GetSecret(ctx context.Context, in *pb.GetSecretRequest) (*p
 	}, nil
 
 }
+
+// DeleteSecret - deletes a user secret from the storage by provide id and userId from ctx.
+func (s *secretGrpc) DeleteSecret(ctx context.Context, in *pb.DeleteSecretRequest) (*pb.DeleteSecretResponse, error) {
+	tok := ctx.Value(auth.JwtTokenCtx{}).(string)
+
+	secret := model.Secret{
+		UserID: uuid.MustParse(tok),
+		ID:     int(in.Id),
+	}
+
+	_, err := s.storage.DeleteSecret(ctx, secret)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.DeleteSecretResponse{}, nil
+}

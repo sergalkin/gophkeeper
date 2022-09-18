@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -28,6 +29,7 @@ const (
 				 from secrets 
 				 where id = $1 and user_id = $2
 `
+	DeleteSecret = `delete from secrets where id = $1 and user_id = $2`
 )
 
 func NewSecretPostgresStorage(c *pgx.Conn) *SecretPostgresStorage {
@@ -74,4 +76,21 @@ func (s *SecretPostgresStorage) GetSecret(ctx context.Context, secret model.Secr
 	secret.Content = decode
 
 	return secret, nil
+}
+
+// DeleteSecret - deletes a user secret from database.
+func (s *SecretPostgresStorage) DeleteSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	err := s.conn.QueryRow(ctxWithTimeOut, DeleteSecret, secret.ID, secret.UserID).Scan()
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return secret, fmt.Errorf("secret deletion err: %w", err)
+		}
+
+		return secret, err
+	}
+
+	return model.Secret{}, nil
 }
