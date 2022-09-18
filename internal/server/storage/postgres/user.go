@@ -78,7 +78,5 @@ func (u UserPostgresStorage) DeleteUser(ctx context.Context, user model.User) (m
 		}
 	}
 
-	user.ID = nil
-
-	return user, nil
+	return model.User{}, nil
 }

@@ -169,7 +169,7 @@ func TestUserPostgresStorage_DeleteUser(t *testing.T) {
 		{
 			name: "User can be deleted by provided user.Model",
 			con:  con,
-			want: model.User{Login: "test", Password: "test"},
+			want: model.User{},
 			do: func(ctx context.Context, user model.User) model.User {
 				con.QueryRow(
 					ctx, "insert into users (login, password) values ('test', 'test') returning id",
