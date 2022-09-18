@@ -32,3 +32,44 @@ func (m *migrationManager) Up() error {
 
 	return nil
 }
+
+// RefreshTest - run DropTest and UpTest functions.
+func (m *migrationManager) RefreshTest() error {
+	if err := m.DropTest(); err != nil {
+		return err
+	}
+	if err := m.UpTest(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DropTest - drops all tables in testing database.
+func (m *migrationManager) DropTest() error {
+	migration, err := migrate.New("file://../../../../internal/server/migrations", m.cfg.DSNTest)
+	if err != nil {
+		return fmt.Errorf("mingrate.New error: %w", err)
+	}
+	defer migration.Close()
+
+	if err = migration.Drop(); err != nil {
+		return fmt.Errorf("error in migrating db: %w", err)
+	}
+
+	return nil
+}
+
+// UpTest - runs migrations against testing database.
+func (m *migrationManager) UpTest() error {
+	migration, err := migrate.New("file://../../../../internal/server/migrations", m.cfg.DSNTest)
+	if err != nil {
+		return fmt.Errorf("mingrate.New error: %w", err)
+	}
+	defer migration.Close()
+
+	if err = migration.Up(); err != nil {
+		return fmt.Errorf("error in migrating db: %w", err)
+	}
+
+	return nil
+}

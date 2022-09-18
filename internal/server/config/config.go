@@ -14,6 +14,7 @@ type Config struct {
 	SSLKeyPath  string `env:"SSL_KEY_PATH" envDefault:"cert/localhost.key"`
 
 	DSN       string `env:"DSN" envDefault:"postgresql://root:root@localhost:5432/gophkeeper?sslmode=disable"`
+	DSNTest   string `env:"DSN" envDefault:"postgresql://root:root@localhost:5432/gophkeeper_test?sslmode=disable"`
 	JWTSecret string `env:"JWT_SECRET" envDefault:"supa_secret_key"`
 	JWTExp    string `env:"JWT_EXP" envDefault:"14"`
 }
