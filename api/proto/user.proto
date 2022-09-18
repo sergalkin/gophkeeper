@@ -22,7 +22,16 @@ message LoginResponse {
     string token = 1;
 }
 
+message DeleteRequest {
+    string id = 1;
+}
+
+message DeleteResponse {
+
+}
+
 service User {
     rpc Register (RegisterRequest) returns (RegisterResponse);
     rpc Login (LoginRequest) returns (LoginResponse);
+    rpc Delete (DeleteRequest) returns (DeleteResponse);
 }

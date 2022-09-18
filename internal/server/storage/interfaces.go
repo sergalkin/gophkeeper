@@ -1,3 +1,4 @@
+//go:generate mockgen -source=./interfaces.go -destination=./mock/storage.go -package=storagemock
 package storage
 
 import (
@@ -11,6 +12,8 @@ type UserServerStorage interface {
 	Create(ctx context.Context, user model.User) (model.User, error)
 	// GetByLoginAndPassword - returns model.User from storage.
 	GetByLoginAndPassword(ctx context.Context, user model.User) (model.User, error)
+	// DeleteUser - deletes a user from storage.
+	DeleteUser(ctx context.Context, user model.User) (model.User, error)
 }
 
 type SecretTypeServerStorage interface {

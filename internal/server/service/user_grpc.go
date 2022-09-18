@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -86,4 +87,19 @@ func (u *userGrpc) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginRes
 	}
 
 	return &pb.LoginResponse{Token: u.crypter.Encode(token)}, nil
+}
+
+// Delete - will delete a user from storage by provided ID.
+func (u *userGrpc) Delete(ctx context.Context, in *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	uid, err := uuid.Parse(in.Id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	_, errDelete := u.storage.DeleteUser(ctx, model.User{ID: &uid})
+	if errDelete != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.DeleteResponse{}, nil
 }
