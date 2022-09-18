@@ -4,18 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
 
 	"github.com/sergalkin/gophkeeper/internal/server/model"
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
-	"github.com/sergalkin/gophkeeper/pkg/apperr"
 )
 
-var _ storage.SecretTypeServerStorage = (*secretTypePostgresStorage)(nil)
+var _ storage.SecretTypeServerStorage = (*SecretTypePostgresStorage)(nil)
 
-type secretTypePostgresStorage struct {
+type SecretTypePostgresStorage struct {
 	conn *pgx.Conn
 }
 
@@ -24,22 +21,16 @@ const (
 )
 
 // NewPostgresSecretTypeStorage - creates a postgres storage for secret types.
-func NewPostgresSecretTypeStorage(c *pgx.Conn) *secretTypePostgresStorage {
-	return &secretTypePostgresStorage{conn: c}
+func NewPostgresSecretTypeStorage(c *pgx.Conn) *SecretTypePostgresStorage {
+	return &SecretTypePostgresStorage{conn: c}
 }
 
 // GetSecretTypes - returns list of all available secret types.
-func (s *secretTypePostgresStorage) GetSecretTypes(ctx context.Context) ([]model.SecretType, error) {
+func (s *SecretTypePostgresStorage) GetSecretTypes(ctx context.Context) ([]model.SecretType, error) {
 	var list []model.SecretType
 
 	rows, err := s.conn.Query(ctx, GetSecretTypeList)
 	if err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgerrcode.IsNoData(pgErr.Code) {
-				return list, apperr.ErrNotFound
-			}
-		}
-
 		return list, fmt.Errorf("error in getting secret types list: %w", err)
 	}
 

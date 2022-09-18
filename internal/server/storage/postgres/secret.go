@@ -12,9 +12,9 @@ import (
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
 )
 
-var _ storage.SecretServerStorage = (*secretPostgresStorage)(nil)
+var _ storage.SecretServerStorage = (*SecretPostgresStorage)(nil)
 
-type secretPostgresStorage struct {
+type SecretPostgresStorage struct {
 	conn *pgx.Conn
 }
 
@@ -30,14 +30,14 @@ const (
 `
 )
 
-func NewSecretPostgresStorage(c *pgx.Conn) *secretPostgresStorage {
-	return &secretPostgresStorage{conn: c}
+func NewSecretPostgresStorage(c *pgx.Conn) *SecretPostgresStorage {
+	return &SecretPostgresStorage{conn: c}
 }
 
 // CreateSecret - stores provided model.Secret in database.
 //
 // Values of key Content of model.Secret is being hex encoded.
-func (s *secretPostgresStorage) CreateSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+func (s *SecretPostgresStorage) CreateSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
@@ -54,7 +54,7 @@ func (s *secretPostgresStorage) CreateSecret(ctx context.Context, secret model.S
 // GetSecret - return rehydrated model.Secret from database.
 //
 // Searches by user_id and id from provided model.Secret
-func (s *secretPostgresStorage) GetSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+func (s *SecretPostgresStorage) GetSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
