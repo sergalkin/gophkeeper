@@ -29,7 +29,16 @@ const (
 				 from secrets 
 				 where id = $1 and user_id = $2
 `
-	DeleteSecret = `delete from secrets where id = $1 and user_id = $2`
+	DeleteSecret = `delete from secrets where id = $1 and user_id = $2 returning id`
+	UpdateSecret = `update secrets 
+					set title = $1, content = $2, updated_at = $3
+					where id = $4 and user_id = $5
+					returning type_id, created_at, deleted_at
+`
+	SecretsByType = `select id, user_id, type_id, title, content, created_at, updated_at, deleted_at 
+					 from secrets
+					 where type_id = $1 and user_id = $2 
+`
 )
 
 func NewSecretPostgresStorage(c *pgx.Conn) *SecretPostgresStorage {
@@ -65,6 +74,10 @@ func (s *SecretPostgresStorage) GetSecret(ctx context.Context, secret model.Secr
 		&secret.CreatedAt, &secret.UpdatedAt, &secret.DeletedAt,
 	)
 	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return secret, fmt.Errorf("secret getting error: %w", err)
+		}
+
 		return secret, fmt.Errorf("error in getting secret from db: %w", err)
 	}
 
@@ -78,12 +91,13 @@ func (s *SecretPostgresStorage) GetSecret(ctx context.Context, secret model.Secr
 	return secret, nil
 }
 
-// DeleteSecret - deletes a user secret from database.
+// DeleteSecret - deletes a model.Secret from database.
 func (s *SecretPostgresStorage) DeleteSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	err := s.conn.QueryRow(ctxWithTimeOut, DeleteSecret, secret.ID, secret.UserID).Scan()
+	var deletedSecretId *int
+	err := s.conn.QueryRow(ctxWithTimeOut, DeleteSecret, secret.ID, secret.UserID).Scan(&deletedSecretId)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return secret, fmt.Errorf("secret deletion err: %w", err)
@@ -93,4 +107,71 @@ func (s *SecretPostgresStorage) DeleteSecret(ctx context.Context, secret model.S
 	}
 
 	return model.Secret{}, nil
+}
+
+// EditSecret - updates a model.Secret in database.
+func (s *SecretPostgresStorage) EditSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	fmt.Println(fmt.Sprintf("%+v", secret))
+	err := s.conn.QueryRow(ctxWithTimeOut, UpdateSecret, secret.Title, hex.EncodeToString(secret.Content),
+		time.Now(), secret.ID, secret.UserID,
+	).Scan(&secret.TypeID, &secret.CreatedAt, &secret.DeletedAt)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return secret, fmt.Errorf("secret updating error: %w", err)
+		}
+
+		return secret, err
+	}
+
+	return secret, nil
+}
+
+// GetListOfSecretByType - returns a []model.Secret from database by provided type_id via model.SecretType and user_id
+// via model.User.
+func (s *SecretPostgresStorage) GetListOfSecretByType(
+	ctx context.Context, secretType model.SecretType, user model.User,
+) ([]model.Secret, error) {
+	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	var secrets []model.Secret
+
+	rows, err := s.conn.Query(ctxWithTimeOut, SecretsByType, secretType.ID, user.ID)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return secrets, fmt.Errorf("getting list of secrets error: %w", err)
+		}
+
+		return secrets, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var secret model.Secret
+
+		if scanErr := rows.Scan(
+			&secret.ID,
+			&secret.UserID,
+			&secret.TypeID,
+			&secret.Title,
+			&secret.Content,
+			&secret.CreatedAt,
+			&secret.UpdatedAt,
+			&secret.DeletedAt); scanErr != nil {
+			return secrets, fmt.Errorf("error is scanning gotten row: %w", scanErr)
+		}
+
+		secret.Content, err = hex.DecodeString(string(secret.Content))
+
+		if err != nil {
+			return secrets, fmt.Errorf("error in decodeing content from row: %w", err)
+		}
+
+		secrets = append(secrets, secret)
+	}
+
+	return secrets, nil
 }

@@ -66,9 +66,6 @@ func NewApp(ctx context.Context) (*App, error) {
 	secretStorage := postgres.NewSecretPostgresStorage(dbConn)
 	secretGrpcService := service.NewSecretGrpc(secretStorage)
 
-	//TODO Получение списка секретов по типу секрета
-	//TODO редактирование секрета
-
 	jwtAuthMiddleware := auth.NewJwtMiddleware(jwtManager, cr).Auth
 
 	gRPCServer := server.NewGrpcServer(

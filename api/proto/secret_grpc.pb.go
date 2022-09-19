@@ -25,6 +25,8 @@ type SecretClient interface {
 	CreateSecret(ctx context.Context, in *CreateSecretRequest, opts ...grpc.CallOption) (*CreateSecretResponse, error)
 	GetSecret(ctx context.Context, in *GetSecretRequest, opts ...grpc.CallOption) (*GetSecretResponse, error)
 	DeleteSecret(ctx context.Context, in *DeleteSecretRequest, opts ...grpc.CallOption) (*DeleteSecretResponse, error)
+	EditSecret(ctx context.Context, in *EditSecretRequest, opts ...grpc.CallOption) (*EditSecretResponse, error)
+	GetListOfSecretsByType(ctx context.Context, in *GetListOfSecretsByTypeRequest, opts ...grpc.CallOption) (*GetListOfSecretsByTypeResponse, error)
 }
 
 type secretClient struct {
@@ -62,6 +64,24 @@ func (c *secretClient) DeleteSecret(ctx context.Context, in *DeleteSecretRequest
 	return out, nil
 }
 
+func (c *secretClient) EditSecret(ctx context.Context, in *EditSecretRequest, opts ...grpc.CallOption) (*EditSecretResponse, error) {
+	out := new(EditSecretResponse)
+	err := c.cc.Invoke(ctx, "/proto.Secret/EditSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretClient) GetListOfSecretsByType(ctx context.Context, in *GetListOfSecretsByTypeRequest, opts ...grpc.CallOption) (*GetListOfSecretsByTypeResponse, error) {
+	out := new(GetListOfSecretsByTypeResponse)
+	err := c.cc.Invoke(ctx, "/proto.Secret/GetListOfSecretsByType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SecretServer is the server API for Secret service.
 // All implementations must embed UnimplementedSecretServer
 // for forward compatibility
@@ -69,6 +89,8 @@ type SecretServer interface {
 	CreateSecret(context.Context, *CreateSecretRequest) (*CreateSecretResponse, error)
 	GetSecret(context.Context, *GetSecretRequest) (*GetSecretResponse, error)
 	DeleteSecret(context.Context, *DeleteSecretRequest) (*DeleteSecretResponse, error)
+	EditSecret(context.Context, *EditSecretRequest) (*EditSecretResponse, error)
+	GetListOfSecretsByType(context.Context, *GetListOfSecretsByTypeRequest) (*GetListOfSecretsByTypeResponse, error)
 	mustEmbedUnimplementedSecretServer()
 }
 
@@ -84,6 +106,12 @@ func (UnimplementedSecretServer) GetSecret(context.Context, *GetSecretRequest) (
 }
 func (UnimplementedSecretServer) DeleteSecret(context.Context, *DeleteSecretRequest) (*DeleteSecretResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSecret not implemented")
+}
+func (UnimplementedSecretServer) EditSecret(context.Context, *EditSecretRequest) (*EditSecretResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EditSecret not implemented")
+}
+func (UnimplementedSecretServer) GetListOfSecretsByType(context.Context, *GetListOfSecretsByTypeRequest) (*GetListOfSecretsByTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetListOfSecretsByType not implemented")
 }
 func (UnimplementedSecretServer) mustEmbedUnimplementedSecretServer() {}
 
@@ -152,6 +180,42 @@ func _Secret_DeleteSecret_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Secret_EditSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServer).EditSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Secret/EditSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServer).EditSecret(ctx, req.(*EditSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Secret_GetListOfSecretsByType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetListOfSecretsByTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServer).GetListOfSecretsByType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Secret/GetListOfSecretsByType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServer).GetListOfSecretsByType(ctx, req.(*GetListOfSecretsByTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Secret_ServiceDesc is the grpc.ServiceDesc for Secret service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +234,14 @@ var Secret_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteSecret",
 			Handler:    _Secret_DeleteSecret_Handler,
+		},
+		{
+			MethodName: "EditSecret",
+			Handler:    _Secret_EditSecret_Handler,
+		},
+		{
+			MethodName: "GetListOfSecretsByType",
+			Handler:    _Secret_GetListOfSecretsByType_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

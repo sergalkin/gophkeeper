@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,28 +18,26 @@ import (
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
 )
 
-type secretGrpc struct {
+type SecretGrpc struct {
 	pb.UnimplementedSecretServer
 
 	storage storage.SecretServerStorage
-	//jwtManager jwt.Manager
 }
 
 // NewSecretGrpc - creates new secret grpc service.
-func NewSecretGrpc(s storage.SecretServerStorage) *secretGrpc {
-	return &secretGrpc{
+func NewSecretGrpc(s storage.SecretServerStorage) *SecretGrpc {
+	return &SecretGrpc{
 		storage: s,
-		//jwtManager: m,
 	}
 }
 
 // RegisterService - registers service via grpc server.
-func (s *secretGrpc) RegisterService(r grpc.ServiceRegistrar) {
+func (s *SecretGrpc) RegisterService(r grpc.ServiceRegistrar) {
 	pb.RegisterSecretServer(r, s)
 }
 
 // CreateSecret - stores a provided secret via initialised storage.
-func (s *secretGrpc) CreateSecret(ctx context.Context, in *pb.CreateSecretRequest) (*pb.CreateSecretResponse, error) {
+func (s *SecretGrpc) CreateSecret(ctx context.Context, in *pb.CreateSecretRequest) (*pb.CreateSecretResponse, error) {
 	tok := ctx.Value(auth.JwtTokenCtx{}).(string)
 
 	secret := model.Secret{
@@ -72,7 +72,7 @@ func (s *secretGrpc) CreateSecret(ctx context.Context, in *pb.CreateSecretReques
 }
 
 // GetSecret - returns stored secret from storage.
-func (s *secretGrpc) GetSecret(ctx context.Context, in *pb.GetSecretRequest) (*pb.GetSecretResponse, error) {
+func (s *SecretGrpc) GetSecret(ctx context.Context, in *pb.GetSecretRequest) (*pb.GetSecretResponse, error) {
 	tok := ctx.Value(auth.JwtTokenCtx{}).(string)
 
 	secret := model.Secret{
@@ -106,7 +106,7 @@ func (s *secretGrpc) GetSecret(ctx context.Context, in *pb.GetSecretRequest) (*p
 }
 
 // DeleteSecret - deletes a user secret from the storage by provide id and userId from ctx.
-func (s *secretGrpc) DeleteSecret(ctx context.Context, in *pb.DeleteSecretRequest) (*pb.DeleteSecretResponse, error) {
+func (s *SecretGrpc) DeleteSecret(ctx context.Context, in *pb.DeleteSecretRequest) (*pb.DeleteSecretResponse, error) {
 	tok := ctx.Value(auth.JwtTokenCtx{}).(string)
 
 	secret := model.Secret{
@@ -116,8 +116,94 @@ func (s *secretGrpc) DeleteSecret(ctx context.Context, in *pb.DeleteSecretReques
 
 	_, err := s.storage.DeleteSecret(ctx, secret)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.DeleteSecretResponse{}, nil
+}
+
+// EditSecret - edits secret in storage.
+func (s *SecretGrpc) EditSecret(ctx context.Context, in *pb.EditSecretRequest) (*pb.EditSecretResponse, error) {
+	token := ctx.Value(auth.JwtTokenCtx{}).(string)
+	secret := model.Secret{
+		ID:      int(in.Id),
+		UserID:  uuid.MustParse(token),
+		Title:   in.Title,
+		TypeID:  int(in.Type),
+		Content: in.Content,
+	}
+
+	updatedSecret, err := s.storage.EditSecret(ctx, secret)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var deletedAt pb.NullableDeletedAt
+	if updatedSecret.DeletedAt != nil {
+		deletedAt = pb.NullableDeletedAt{Kind: &pb.NullableDeletedAt_Data{
+			Data: timestamppb.New(*updatedSecret.DeletedAt)},
+		}
+	} else {
+		deletedAt = pb.NullableDeletedAt{Kind: nil}
+	}
+
+	return &pb.EditSecretResponse{
+		Id:        uint32(updatedSecret.ID),
+		Title:     updatedSecret.Title,
+		Type:      uint32(updatedSecret.TypeID),
+		CreatedAt: timestamppb.New(updatedSecret.CreatedAt),
+		UpdatedAt: timestamppb.New(updatedSecret.UpdatedAt),
+		DeletedAt: &deletedAt,
+	}, nil
+}
+
+// GetListOfSecretsByType - returns list of model.Secret.
+func (s *SecretGrpc) GetListOfSecretsByType(
+	ctx context.Context, in *pb.GetListOfSecretsByTypeRequest,
+) (*pb.GetListOfSecretsByTypeResponse, error) {
+	token := ctx.Value(auth.JwtTokenCtx{}).(string)
+
+	userId, errParse := uuid.Parse(token)
+	if errParse != nil {
+		return nil, status.Error(codes.Internal, errParse.Error())
+	}
+
+	user := model.User{ID: &userId}
+	secretType := model.SecretType{ID: uint(in.TypeId)}
+
+	secrets, err := s.storage.GetListOfSecretByType(ctx, secretType, user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var castedSecrets []*pb.SecretList
+
+	for _, val := range secrets {
+		var deletedAt pb.NullableDeletedAt
+		if val.DeletedAt != nil {
+			deletedAt = pb.NullableDeletedAt{Kind: &pb.NullableDeletedAt_Data{Data: timestamppb.New(*val.DeletedAt)}}
+		} else {
+			deletedAt = pb.NullableDeletedAt{Kind: nil}
+		}
+
+		castedSecrets = append(castedSecrets, &pb.SecretList{
+			Id:        uint32(val.ID),
+			UserId:    val.UserID.String(),
+			TypeId:    uint32(val.TypeID),
+			Title:     val.Title,
+			Content:   val.Content,
+			CreatedAt: timestamppb.New(val.CreatedAt),
+			UpdatedAt: timestamppb.New(val.UpdatedAt),
+			DeletedAt: &deletedAt,
+		})
+	}
+
+	return &pb.GetListOfSecretsByTypeResponse{SecretLists: castedSecrets}, nil
 }
