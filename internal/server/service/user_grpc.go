@@ -6,11 +6,13 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/sergalkin/gophkeeper/api/proto"
+	"github.com/sergalkin/gophkeeper/internal/server/middleware/auth"
 	"github.com/sergalkin/gophkeeper/internal/server/model"
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
 	"github.com/sergalkin/gophkeeper/pkg/apperr"
@@ -73,7 +75,7 @@ func (u *userGrpc) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.Re
 func (u *userGrpc) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	userModel, err := u.storage.GetByLoginAndPassword(ctx, model.User{Login: in.Login, Password: in.Password})
 
-	if errors.Is(err, apperr.ErrNotFound) {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
@@ -91,14 +93,19 @@ func (u *userGrpc) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginRes
 
 // Delete - will delete a user from storage by provided ID.
 func (u *userGrpc) Delete(ctx context.Context, in *pb.DeleteRequest) (*pb.DeleteResponse, error) {
-	uid, err := uuid.Parse(in.Id)
+	token := ctx.Value(auth.JwtTokenCtx{}).(string)
+
+	uid, err := uuid.Parse(token)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	_, errDelete := u.storage.DeleteUser(ctx, model.User{ID: &uid})
 	if errDelete != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		if errors.Is(errDelete, pgx.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, errDelete.Error())
+		}
+		return nil, status.Error(codes.Internal, errDelete.Error())
 	}
 
 	return &pb.DeleteResponse{}, nil

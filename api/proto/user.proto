@@ -23,11 +23,9 @@ message LoginResponse {
 }
 
 message DeleteRequest {
-    string id = 1;
 }
 
 message DeleteResponse {
-
 }
 
 service User {

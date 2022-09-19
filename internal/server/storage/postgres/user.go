@@ -24,7 +24,7 @@ type UserPostgresStorage struct {
 const (
 	CreateUser     = `INSERT INTO users (login, password) VALUES ($1, crypt($2, gen_salt('bf'))) returning id`
 	GetUserId      = `SELECT id FROM users WHERE login = $1 AND password = crypt($2, password)`
-	DeleteUserById = `DELETE from users where id = $1`
+	DeleteUserById = `DELETE from users where id = $1 returning login`
 )
 
 // NewPostgresUserStorage - Creates UserPostgresStorage instance.
@@ -60,7 +60,7 @@ func (u UserPostgresStorage) GetByLoginAndPassword(ctx context.Context, user mod
 
 	err := u.conn.QueryRow(ctxWithTimeOut, GetUserId, user.Login, user.Password).Scan(&user.ID)
 	if err != nil {
-		return user, fmt.Errorf("user insertion err: %w", err)
+		return user, fmt.Errorf("user login err: %w", err)
 	}
 
 	return user, nil
@@ -71,11 +71,14 @@ func (u UserPostgresStorage) DeleteUser(ctx context.Context, user model.User) (m
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	err := u.conn.QueryRow(ctxWithTimeOut, DeleteUserById, user.ID).Scan()
+	var deletedLogin *string
+	err := u.conn.QueryRow(ctxWithTimeOut, DeleteUserById, user.ID).Scan(&deletedLogin)
 	if err != nil {
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return user, fmt.Errorf("user deletion err: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return user, err
 		}
+
+		return user, fmt.Errorf("user deletion err: %w", err)
 	}
 
 	return model.User{}, nil
