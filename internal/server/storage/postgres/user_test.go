@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/assert"
 
@@ -160,11 +161,11 @@ func TestUserPostgresStorage_DeleteUser(t *testing.T) {
 	defer con.Close(ctx)
 
 	tests := []struct {
-		name    string
-		con     *pgx.Conn
-		want    model.User
-		wantErr assert.ErrorAssertionFunc
-		do      func(ctx context.Context, user model.User) model.User
+		name      string
+		con       *pgx.Conn
+		want      model.User
+		errAssert assert.ErrorAssertionFunc
+		do        func(ctx context.Context, user model.User) model.User
 	}{
 		{
 			name: "User can be deleted by provided user.Model",
@@ -177,7 +178,19 @@ func TestUserPostgresStorage_DeleteUser(t *testing.T) {
 
 				return user
 			},
-			wantErr: assert.NoError,
+			errAssert: assert.NoError,
+		},
+		{
+			name: "User deletion will return no rows error if non existing user_id is provided",
+			con:  con,
+			want: model.User{},
+			do: func(ctx context.Context, user model.User) model.User {
+				uid := uuid.New()
+				user.ID = &uid
+
+				return user
+			},
+			errAssert: assert.Error,
 		},
 	}
 	for _, tt := range tests {
@@ -188,11 +201,15 @@ func TestUserPostgresStorage_DeleteUser(t *testing.T) {
 			user = tt.do(ctx, user)
 
 			got, err := u.DeleteUser(ctx, user)
-			if !tt.wantErr(t, err, fmt.Sprintf("DeleteUser(%v, %v)", ctx, user)) {
+
+			tt.errAssert(t, err, fmt.Sprintf("DeleteUser(%v, %v)", ctx, user))
+
+			if err == nil {
+				assert.Equalf(t, tt.want, got, "DeleteUser(%v, %v)", ctx, user)
 				return
 			}
 
-			assert.Equalf(t, tt.want, got, "DeleteUser(%v, %v)", ctx, user)
+			assert.Equalf(t, user, got, "DeleteUser(%v, %v)", ctx, user)
 		})
 	}
 }

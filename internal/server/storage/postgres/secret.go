@@ -33,7 +33,7 @@ const (
 	UpdateSecret = `update secrets 
 					set title = $1, content = $2, updated_at = $3
 					where id = $4 and user_id = $5
-					returning type_id, created_at, deleted_at
+					returning type_id, updated_at, deleted_at
 `
 	SecretsByType = `select id, user_id, type_id, title, content, created_at, updated_at, deleted_at 
 					 from secrets
@@ -114,10 +114,9 @@ func (s *SecretPostgresStorage) EditSecret(ctx context.Context, secret model.Sec
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	fmt.Println(fmt.Sprintf("%+v", secret))
 	err := s.conn.QueryRow(ctxWithTimeOut, UpdateSecret, secret.Title, hex.EncodeToString(secret.Content),
 		time.Now(), secret.ID, secret.UserID,
-	).Scan(&secret.TypeID, &secret.CreatedAt, &secret.DeletedAt)
+	).Scan(&secret.TypeID, &secret.UpdatedAt, &secret.DeletedAt)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return secret, fmt.Errorf("secret updating error: %w", err)
@@ -141,11 +140,7 @@ func (s *SecretPostgresStorage) GetListOfSecretByType(
 
 	rows, err := s.conn.Query(ctxWithTimeOut, SecretsByType, secretType.ID, user.ID)
 	if err != nil {
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return secrets, fmt.Errorf("getting list of secrets error: %w", err)
-		}
-
-		return secrets, err
+		return secrets, fmt.Errorf("getting list of secrets error: %w", err)
 	}
 	defer rows.Close()
 
@@ -160,8 +155,9 @@ func (s *SecretPostgresStorage) GetListOfSecretByType(
 			&secret.Content,
 			&secret.CreatedAt,
 			&secret.UpdatedAt,
-			&secret.DeletedAt); scanErr != nil {
-			return secrets, fmt.Errorf("error is scanning gotten row: %w", scanErr)
+			&secret.DeletedAt,
+		); scanErr != nil {
+			return secrets, fmt.Errorf("error in scanning gotten row: %w", scanErr)
 		}
 
 		secret.Content, err = hex.DecodeString(string(secret.Content))

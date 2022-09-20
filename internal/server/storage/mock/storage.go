@@ -171,6 +171,36 @@ func (mr *MockSecretServerStorageMockRecorder) DeleteSecret(ctx, secret interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSecret", reflect.TypeOf((*MockSecretServerStorage)(nil).DeleteSecret), ctx, secret)
 }
 
+// EditSecret mocks base method.
+func (m *MockSecretServerStorage) EditSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EditSecret", ctx, secret)
+	ret0, _ := ret[0].(model.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EditSecret indicates an expected call of EditSecret.
+func (mr *MockSecretServerStorageMockRecorder) EditSecret(ctx, secret interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditSecret", reflect.TypeOf((*MockSecretServerStorage)(nil).EditSecret), ctx, secret)
+}
+
+// GetListOfSecretByType mocks base method.
+func (m *MockSecretServerStorage) GetListOfSecretByType(ctx context.Context, secretType model.SecretType, user model.User) ([]model.Secret, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetListOfSecretByType", ctx, secretType, user)
+	ret0, _ := ret[0].([]model.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetListOfSecretByType indicates an expected call of GetListOfSecretByType.
+func (mr *MockSecretServerStorageMockRecorder) GetListOfSecretByType(ctx, secretType, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetListOfSecretByType", reflect.TypeOf((*MockSecretServerStorage)(nil).GetListOfSecretByType), ctx, secretType, user)
+}
+
 // GetSecret mocks base method.
 func (m *MockSecretServerStorage) GetSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
 	m.ctrl.T.Helper()
