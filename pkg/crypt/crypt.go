@@ -1,3 +1,4 @@
+//go:generate mockgen -source=./crypt.go -destination=./mock/crypt.go -package=cryptmock
 package crypt
 
 import (

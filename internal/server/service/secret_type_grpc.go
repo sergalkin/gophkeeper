@@ -11,26 +11,26 @@ import (
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
 )
 
-type secretTypeGrpc struct {
+type SecretTypeGrpc struct {
 	pb.UnimplementedSecretTypeServer
 
 	storage storage.SecretTypeServerStorage
 }
 
 // NewSecretTypeGrpc - creates new secret type grpc service.
-func NewSecretTypeGrpc(s storage.SecretTypeServerStorage) *secretTypeGrpc {
-	return &secretTypeGrpc{storage: s}
+func NewSecretTypeGrpc(s storage.SecretTypeServerStorage) *SecretTypeGrpc {
+	return &SecretTypeGrpc{storage: s}
 }
 
 // RegisterService - registers service via grpc server.
-func (s *secretTypeGrpc) RegisterService(r grpc.ServiceRegistrar) {
+func (s *SecretTypeGrpc) RegisterService(r grpc.ServiceRegistrar) {
 	pb.RegisterSecretTypeServer(r, s)
 }
 
 // GetSecretTypesList - returns list of secret types.
 //
 // Can be accessed only by authorized users.
-func (s *secretTypeGrpc) GetSecretTypesList(
+func (s *SecretTypeGrpc) GetSecretTypesList(
 	ctx context.Context, in *pb.SecretTypesListRequest,
 ) (*pb.SecretTypesListResponse, error) {
 	list, err := s.storage.GetSecretTypes(ctx)
