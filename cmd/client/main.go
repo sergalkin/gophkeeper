@@ -338,8 +338,10 @@ func executor(s string) {
 				switch numArgs {
 				case 4:
 					fmt.Println("you have to write password")
+					return
 				case 3:
 					fmt.Println("you have to write login,password")
+					return
 				default:
 					converted, errConv = json.Marshal(model.LoginPassSecret{
 						Id:         id,
@@ -350,12 +352,14 @@ func executor(s string) {
 					})
 					if errConv != nil {
 						fmt.Println(errConv)
+						return
 					}
 				}
 			case 2:
 				switch numArgs {
 				case 3:
 					fmt.Println("you have to write text")
+					return
 				default:
 					converted, errConv = json.Marshal(model.TextSecret{
 						Id:         id,
@@ -365,12 +369,14 @@ func executor(s string) {
 					})
 					if errConv != nil {
 						fmt.Println(errConv)
+						return
 					}
 				}
 			case 3:
 				switch numArgs {
 				case 3:
 					fmt.Println("you have to write file")
+					return
 				default:
 					converted, errConv = json.Marshal(model.FileSecret{
 						Id:         id,
@@ -380,16 +386,20 @@ func executor(s string) {
 					})
 					if errConv != nil {
 						fmt.Println(errConv)
+						return
 					}
 				}
 			case 4:
 				switch numArgs {
 				case 5:
 					fmt.Println("you have to write due")
+					return
 				case 4:
 					fmt.Println("you have to write cvv,due")
+					return
 				case 3:
 					fmt.Println("you have to write card number,cvv,due")
+					return
 				default:
 					converted, errConv = json.Marshal(model.CardSecret{
 						Id:         id,
@@ -401,6 +411,7 @@ func executor(s string) {
 					})
 					if errConv != nil {
 						fmt.Println(errConv)
+						return
 					}
 				}
 			}
@@ -411,6 +422,7 @@ func executor(s string) {
 
 		if err := clientApp.SecretService.EditSecret(id, setCommand[2], recordType, string(converted)); err != nil {
 			fmt.Println(err)
+			return
 		}
 
 		return
