@@ -10,6 +10,7 @@ type SecretTypeClientService struct {
 	client pb.SecretTypeClient
 }
 
+// NewSecretTypeClientService - creates new SecretTypeClientService.
 func NewSecretTypeClientService(glCtx *model.GlobalContext, client pb.SecretTypeClient) *SecretTypeClientService {
 	return &SecretTypeClientService{
 		glCtx:  glCtx,
@@ -17,6 +18,7 @@ func NewSecretTypeClientService(glCtx *model.GlobalContext, client pb.SecretType
 	}
 }
 
+// List - returns secret types list from server.
 func (s *SecretTypeClientService) List() (*pb.SecretTypesListResponse, error) {
 	request := &pb.SecretTypesListRequest{}
 

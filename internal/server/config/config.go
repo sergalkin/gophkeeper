@@ -21,6 +21,7 @@ type Config struct {
 
 var cfg Config
 
+// NewConfig - creates new Config.
 func NewConfig() Config {
 	cfg.parse()
 

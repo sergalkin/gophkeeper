@@ -19,6 +19,7 @@ type Config struct {
 
 var cfg Config
 
+// NewConfig - creates client Config.
 func NewConfig() Config {
 	cfg.parse()
 

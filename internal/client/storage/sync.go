@@ -23,10 +23,12 @@ type Sync struct {
 	cr           crypt.Crypter
 }
 
+// NewSync - creates new Sync.
 func NewSync(s Memorier, sc pb.SecretClient, ctx *model.GlobalContext, cr crypt.Crypter) *Sync {
 	return &Sync{storage: s, secretClient: sc, glCtx: ctx, cr: cr}
 }
 
+// SyncAll - runs SyncTextData, SyncPassLoginData, SyncCardData under the hood.
 func (s *Sync) SyncAll() {
 	if err := s.SyncTextData(); err != nil {
 		fmt.Println(err)
@@ -41,6 +43,7 @@ func (s *Sync) SyncAll() {
 	}
 }
 
+// SyncTextData - makes gRPC request to server and on success sets acquired records to MemoryStorage.TextSecrets.
 func (s *Sync) SyncTextData() error {
 	texts, err := s.secretClient.GetListOfSecretsByType(s.glCtx.Ctx, &pb.GetListOfSecretsByTypeRequest{TypeId: 2})
 	if err != nil {
@@ -73,6 +76,7 @@ func (s *Sync) SyncTextData() error {
 	return nil
 }
 
+// SyncCardData - makes gRPC request to server and on success sets acquired records to MemoryStorage.CardSecrets.
 func (s *Sync) SyncCardData() error {
 	cards, err := s.secretClient.GetListOfSecretsByType(s.glCtx.Ctx, &pb.GetListOfSecretsByTypeRequest{TypeId: 4})
 	if err != nil {
@@ -105,6 +109,8 @@ func (s *Sync) SyncCardData() error {
 	return nil
 }
 
+// SyncPassLoginData - makes gRPC request to server and on success sets acquired records to
+// MemoryStorage.LoginPassSecrets.
 func (s *Sync) SyncPassLoginData() error {
 	lists, err := s.secretClient.GetListOfSecretsByType(s.glCtx.Ctx, &pb.GetListOfSecretsByTypeRequest{TypeId: 1})
 	if err != nil {

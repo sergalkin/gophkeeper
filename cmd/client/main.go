@@ -40,6 +40,7 @@ func main() {
 	p.Run()
 }
 
+// executor - executes proper function based on entered text in terminal.
 func executor(s string) {
 	s = strings.TrimSpace(s)
 	setCommand := strings.Split(s, " ")
@@ -420,6 +421,7 @@ func executor(s string) {
 	}
 }
 
+// completer - a list of suggestions.
 func completer(d prompt.Document) []prompt.Suggest {
 	var s []prompt.Suggest
 

@@ -27,6 +27,7 @@ type MemoryStorage struct {
 	CardSecrets      map[int]model.CardSecret
 }
 
+// NewMemoryStorage - creates new MemoryStorage.
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
 		LoginPassSecrets: make(map[int]model.LoginPassSecret, 0),
@@ -35,6 +36,11 @@ func NewMemoryStorage() *MemoryStorage {
 	}
 }
 
+// GetLoginPassSecret - attempts to return model.LoginPassSecret from MemoryStorage.
+//
+// If record is found, then returns model.LoginPassSecret and true as representation of found record.
+//
+// If nothing is found, then returns empty model.LoginPassSecret and false as representation of not found record.
 func (ms *MemoryStorage) GetLoginPassSecret(id int) (model.LoginPassSecret, bool, error) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -47,6 +53,7 @@ func (ms *MemoryStorage) GetLoginPassSecret(id int) (model.LoginPassSecret, bool
 	return data, ok, nil
 }
 
+// SetLoginPassSecrets - Sets []model.LoginPassSecret to MemoryStorage.
 func (ms *MemoryStorage) SetLoginPassSecrets(models []model.LoginPassSecret) {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
@@ -56,12 +63,14 @@ func (ms *MemoryStorage) SetLoginPassSecrets(models []model.LoginPassSecret) {
 	}
 }
 
+// ResetStorage - removes all records from MemoryStorage.
 func (ms *MemoryStorage) ResetStorage() {
 	ms.LoginPassSecrets = make(map[int]model.LoginPassSecret, 0)
 	ms.TextSecrets = make(map[int]model.TextSecret, 0)
 	ms.CardSecrets = make(map[int]model.CardSecret, 0)
 }
 
+// SetCardSecrets - Sets []model.CardSecret to MemoryStorage.
 func (ms *MemoryStorage) SetCardSecrets(models []model.CardSecret) {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
@@ -71,6 +80,11 @@ func (ms *MemoryStorage) SetCardSecrets(models []model.CardSecret) {
 	}
 }
 
+// GetCardSecret - attempts to return model.CardSecret from MemoryStorage.
+//
+// If record is found, then returns model.CardSecret and true as representation of found record.
+//
+// If nothing is found, then returns empty model.CardSecret and false as representation of not found record.
 func (ms *MemoryStorage) GetCardSecret(id int) (model.CardSecret, bool, error) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -83,6 +97,7 @@ func (ms *MemoryStorage) GetCardSecret(id int) (model.CardSecret, bool, error) {
 	return data, ok, nil
 }
 
+// SetTextSecrets - Sets []model.TextSecret to MemoryStorage.
 func (ms *MemoryStorage) SetTextSecrets(models []model.TextSecret) {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
@@ -92,6 +107,11 @@ func (ms *MemoryStorage) SetTextSecrets(models []model.TextSecret) {
 	}
 }
 
+// GetTextSecret - attempts to return model.TextSecret from MemoryStorage.
+//
+// If record is found, then returns model.TextSecret and true as representation of found record.
+//
+// If nothing is found, then returns empty model.TextSecret and false as representation of not found record.
 func (ms *MemoryStorage) GetTextSecret(id int) (model.TextSecret, bool, error) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -104,6 +124,15 @@ func (ms *MemoryStorage) GetTextSecret(id int) (model.TextSecret, bool, error) {
 	return data, ok, nil
 }
 
+// FindInStorage - attempts to find record in MemoryStorage by provided id.
+//
+// If record is found in LoginPassSecrets then returns model.LoginPassSecret and true as representation of found record.
+//
+// If record is found in TextSecrets then returns model.TextSecret and true as representation of found record.
+//
+// If record is found in CardSecrets then returns model.CardSecret and true as representation of found record.
+//
+// Otherwise, returns nil and false as representation of not found record.
 func (ms *MemoryStorage) FindInStorage(id int) (interface{}, bool) {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
@@ -126,6 +155,7 @@ func (ms *MemoryStorage) FindInStorage(id int) (interface{}, bool) {
 	return nil, false
 }
 
+// GetSecretList - goes through all MemoryStorage records and returns []*GetSecretList.
 func (ms *MemoryStorage) GetSecretList() []*proto.SecretList {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()

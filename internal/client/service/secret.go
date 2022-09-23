@@ -20,6 +20,7 @@ type SecretClientService struct {
 	syncer  storage.Syncer
 }
 
+// NewSecretClientService - creates new SecretClientService.
 func NewSecretClientService(
 	glCtx *model.GlobalContext, client pb.SecretClient, st storage.Memorier, cr crypt.Crypter, sr storage.Syncer,
 ) *SecretClientService {
@@ -32,6 +33,8 @@ func NewSecretClientService(
 	}
 }
 
+// GetListOfSecretes - attempts to return list of secrets from memory, if nothing is found then makes gRPC request
+// to server.
 func (s *SecretClientService) GetListOfSecretes(id int) ([]*pb.SecretList, error) {
 	var list []*pb.SecretList
 	list = s.storage.GetSecretList()
@@ -47,6 +50,7 @@ func (s *SecretClientService) GetListOfSecretes(id int) ([]*pb.SecretList, error
 	return result.SecretLists, nil
 }
 
+// GetBinarySecret - get binary data from server and stores it into file.
 func (s *SecretClientService) GetBinarySecret(id int, location string) error {
 	res, err := s.client.GetSecret(s.glCtx.Ctx, &pb.GetSecretRequest{Id: int32(id)})
 	if err != nil {
@@ -78,6 +82,7 @@ func (s *SecretClientService) GetBinarySecret(id int, location string) error {
 	return nil
 }
 
+// GetSecret - attempts to get secret from memory by its id, if nothing is found then makes gRPC request to server.
 func (s *SecretClientService) GetSecret(id int) error {
 	data, ok := s.storage.FindInStorage(id)
 	if ok {
@@ -115,15 +120,12 @@ func (s *SecretClientService) GetSecret(id int) error {
 		return errUnmarshal
 	}
 
-	//fmt.Printf(
-	//	"Content:%+v\nCreated:%v\nUpdated:%v\n", m, result.CreatedAt.AsTime(), result.UpdatedAt.AsTime(),
-	//)
-
 	fmt.Printf("Content:%+v", m)
 
 	return nil
 }
 
+// CreateSecret - creates new secret on the server and then makes re-sync memory storage.
 func (s *SecretClientService) CreateSecret(title string, recordType int, content string) error {
 	contentT := []byte(s.crypt.Encode(content))
 
@@ -144,6 +146,7 @@ func (s *SecretClientService) CreateSecret(title string, recordType int, content
 	return nil
 }
 
+// DeleteSecret - deletes a secrete from server and then makes re-sync memory storage.
 func (s *SecretClientService) DeleteSecret(id int) error {
 	_, err := s.client.DeleteSecret(s.glCtx.Ctx, &pb.DeleteSecretRequest{Id: uint32(id)})
 	if err != nil {
@@ -157,6 +160,7 @@ func (s *SecretClientService) DeleteSecret(id int) error {
 	return nil
 }
 
+// EditSecret - edits secret on the server and then makes re-sync memory storage.
 func (s *SecretClientService) EditSecret(id int, title string, recordType int, content string) error {
 	contentT := []byte(s.crypt.Encode(content))
 

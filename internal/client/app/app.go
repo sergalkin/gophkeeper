@@ -29,6 +29,7 @@ type App struct {
 	Cron    *cron.Cron
 }
 
+// NewApp - creates Client application.
 func NewApp() (*App, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	glCtx := model.GlobalContext{Ctx: ctx, Cancel: cancel}
