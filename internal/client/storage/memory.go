@@ -16,7 +16,7 @@ type Memorier interface {
 	GetTextSecret(id int) (model.TextSecret, bool, error)
 	SetTextSecrets([]model.TextSecret)
 	FindInStorage(id int) (interface{}, bool)
-	GetSecretList() []*proto.SecretList
+	GetSecretList(id int) []*proto.SecretList
 	ResetStorage()
 }
 
@@ -153,22 +153,41 @@ func (ms *MemoryStorage) FindInStorage(id int) (interface{}, bool) {
 }
 
 // GetSecretList - goes through all MemoryStorage records and returns []*GetSecretList.
-func (ms *MemoryStorage) GetSecretList() []*proto.SecretList {
+func (ms *MemoryStorage) GetSecretList(id int) []*proto.SecretList {
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
 
 	var list []*proto.SecretList
-	for _, data := range ms.LoginPassSecrets {
-		list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
+	switch id {
+	case 1:
+		for _, data := range ms.LoginPassSecrets {
+			list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
+		}
+	case 2:
+		for _, data := range ms.TextSecrets {
+			list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
+		}
+	case 4:
+		for _, data := range ms.CardSecrets {
+			list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
+		}
 	}
-
-	for _, data := range ms.TextSecrets {
-		list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
-	}
-
-	for _, data := range ms.CardSecrets {
-		list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
-	}
+	//
+	//
+	//fmt.Println(data)
+	//for _, data := range ms.LoginPassSecrets {
+	//	list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
+	//}
+	//fmt.Println(list)
+	//
+	//for _, data := range ms.TextSecrets {
+	//	list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
+	//}
+	//fmt.Println(list)
+	//
+	//for _, data := range ms.CardSecrets {
+	//	list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
+	//}
 
 	return list
 }
