@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/c-bata/go-prompt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/sergalkin/gophkeeper/internal/client/app"
 	"github.com/sergalkin/gophkeeper/internal/client/model"
@@ -57,7 +59,14 @@ func executor(s string) {
 
 		user := model.User{Login: setCommand[1], Password: setCommand[2]}
 		if err := clientApp.UserService.Login(user); err != nil {
-			fmt.Println(err)
+			switch status.Code(err) {
+			case codes.NotFound:
+				fmt.Println("User not found")
+				return
+			default:
+				fmt.Println(err)
+				return
+			}
 		}
 
 		// firstly we sync all on start up
@@ -66,6 +75,7 @@ func executor(s string) {
 		// then we spawn goroutin with cron job to sync data every minute
 		go clientApp.Cron.Run()
 
+		fmt.Println("successfully authorized")
 		return
 	case "register":
 		switch len(setCommand) - 1 {
@@ -78,7 +88,14 @@ func executor(s string) {
 		}
 		user := model.User{Login: setCommand[1], Password: setCommand[2]}
 		if err := clientApp.UserService.Register(user); err != nil {
-			fmt.Println(err)
+			switch status.Code(err) {
+			case codes.InvalidArgument:
+				fmt.Println("Data validation error or user already exists")
+				return
+			default:
+				fmt.Println(err)
+				return
+			}
 		}
 
 		return
@@ -165,8 +182,11 @@ func executor(s string) {
 		return
 	case "create-binary-secret":
 		switch len(setCommand) - 1 {
-		case 0:
+		case 1:
 			fmt.Println("you have to write file path")
+			return
+		case 0:
+			fmt.Println("you have to write title and file path")
 			return
 		}
 
@@ -242,7 +262,14 @@ func executor(s string) {
 		}
 
 		if err := clientApp.SecretService.GetSecret(id); err != nil {
-			fmt.Println(err)
+			switch status.Code(err) {
+			case codes.NotFound:
+				fmt.Println("Secret not found")
+				return
+			default:
+				fmt.Println(err)
+				return
+			}
 		}
 
 		return

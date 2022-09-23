@@ -84,13 +84,18 @@ func (s *SecretClientService) GetBinarySecret(id int, location string) error {
 
 // GetSecret - attempts to get secret from memory by its id, if nothing is found then makes gRPC request to server.
 func (s *SecretClientService) GetSecret(id int) error {
+	//fmt.Println(s.storage)
 	data, ok := s.storage.FindInStorage(id)
+	//fmt.Println(data, ok)
+
 	if ok {
 		fmt.Printf("Content:%+v\n", data)
 
+		//fmt.Println("koi")
 		return nil
 	}
 
+	//fmt.Println("boi")
 	result, err := s.client.GetSecret(s.glCtx.Ctx, &pb.GetSecretRequest{Id: int32(id)})
 	if err != nil {
 		return err
@@ -120,7 +125,7 @@ func (s *SecretClientService) GetSecret(id int) error {
 		return errUnmarshal
 	}
 
-	fmt.Printf("Content:%+v", m)
+	fmt.Printf("Content:%+v\n", m)
 
 	return nil
 }
@@ -155,6 +160,7 @@ func (s *SecretClientService) DeleteSecret(id int) error {
 
 	fmt.Println("successfully deleted secret")
 
+	s.storage.ResetStorage()
 	s.syncer.SyncAll()
 
 	return nil

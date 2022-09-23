@@ -134,9 +134,6 @@ func (ms *MemoryStorage) GetTextSecret(id int) (model.TextSecret, bool, error) {
 //
 // Otherwise, returns nil and false as representation of not found record.
 func (ms *MemoryStorage) FindInStorage(id int) (interface{}, bool) {
-	ms.mu.Lock()
-	defer ms.mu.Unlock()
-
 	data, ok, _ := ms.GetLoginPassSecret(id)
 	if ok {
 		return data, true

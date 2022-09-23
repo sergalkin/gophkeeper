@@ -52,8 +52,9 @@ func (s *Sync) SyncTextData() error {
 
 	var list []model.TextSecret
 	for _, text := range texts.SecretLists {
+		id := int(text.Id)
 		m := model.TextSecret{
-			Id:         int(text.Id),
+			Id:         id,
 			Title:      text.Title,
 			RecordType: 2,
 		}
@@ -67,6 +68,7 @@ func (s *Sync) SyncTextData() error {
 		if errUnmarshal != nil {
 			return errUnmarshal
 		}
+		m.Id = id
 
 		list = append(list, m)
 	}
@@ -85,6 +87,7 @@ func (s *Sync) SyncCardData() error {
 
 	var list []model.CardSecret
 	for _, card := range cards.SecretLists {
+		id := int(card.Id)
 		m := model.CardSecret{
 			Id:         int(card.Id),
 			Title:      card.Title,
@@ -100,6 +103,7 @@ func (s *Sync) SyncCardData() error {
 		if errUnmarshal != nil {
 			return errUnmarshal
 		}
+		m.Id = id
 
 		list = append(list, m)
 	}
@@ -119,6 +123,7 @@ func (s *Sync) SyncPassLoginData() error {
 
 	var list []model.LoginPassSecret
 	for _, sList := range lists.SecretLists {
+		id := int(sList.Id)
 		m := model.LoginPassSecret{
 			Id:         int(sList.Id),
 			Title:      sList.Title,
@@ -134,6 +139,7 @@ func (s *Sync) SyncPassLoginData() error {
 		if errUnmarshal != nil {
 			return errUnmarshal
 		}
+		m.Id = id
 
 		list = append(list, m)
 	}

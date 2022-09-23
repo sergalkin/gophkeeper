@@ -83,6 +83,10 @@ func (s *SecretGrpc) GetSecret(ctx context.Context, in *pb.GetSecretRequest) (*p
 	m, err := s.storage.GetSecret(ctx, secret)
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
