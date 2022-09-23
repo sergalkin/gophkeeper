@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/sergalkin/gophkeeper/internal/client"
+	clientConfig "github.com/sergalkin/gophkeeper/internal/client/config"
 	"github.com/sergalkin/gophkeeper/internal/server/config"
 	"github.com/sergalkin/gophkeeper/pkg/logger"
 )
@@ -15,7 +15,7 @@ var _ SSLConfigLoaderService = (*sslConfigService)(nil)
 
 // SSLConfigLoaderService provides methods for ssl.
 type SSLConfigLoaderService interface {
-	LoadClientCertificate(cfg client.Config) (credentials.TransportCredentials, error)
+	LoadClientCertificate(cfg clientConfig.Config) (credentials.TransportCredentials, error)
 	LoadServerCertificate(cfg config.Config) (*tls.Config, error)
 }
 
@@ -31,7 +31,7 @@ func NewSSLConfigService() *sslConfigService {
 }
 
 // LoadClientCertificate returns client credential TLS by path from client config.
-func (s sslConfigService) LoadClientCertificate(cfg client.Config) (credentials.TransportCredentials, error) {
+func (s sslConfigService) LoadClientCertificate(cfg clientConfig.Config) (credentials.TransportCredentials, error) {
 	cert, err := tls.LoadX509KeyPair(cfg.SSLCertPath, cfg.SSLKeyPath)
 	if err != nil {
 		s.l.Error(err.Error())

@@ -1,4 +1,4 @@
-package client
+package config
 
 import (
 	"github.com/caarlos0/env/v6"
@@ -12,6 +12,9 @@ type Config struct {
 
 	SSLCertPath string `env:"SSL_CERT_PATH" envDefault:"cert/localhost.crt"`
 	SSLKeyPath  string `env:"SSL_KEY_PATH" envDefault:"cert/localhost.key"`
+
+	JWTSecret string `env:"JWT_SECRET" envDefault:"supa_secret_key"`
+	JWTExp    string `env:"JWT_EXP" envDefault:"14"`
 }
 
 var cfg Config

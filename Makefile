@@ -23,8 +23,3 @@ migrate-create:
 #example: make migrate type=up
 migrate:
 	migrate -path internal/server/migrations -database "postgresql://root:root@localhost:5432/gophkeeper?sslmode=disable" -verbose $(type)
-
-# example: make release V=0.0.0
-release:
-	echo v$(V)
-	@read -p "Press enter to confirm and push to origin ..."
