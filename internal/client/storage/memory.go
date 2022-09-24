@@ -172,22 +172,6 @@ func (ms *MemoryStorage) GetSecretList(id int) []*proto.SecretList {
 			list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
 		}
 	}
-	//
-	//
-	//fmt.Println(data)
-	//for _, data := range ms.LoginPassSecrets {
-	//	list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
-	//}
-	//fmt.Println(list)
-	//
-	//for _, data := range ms.TextSecrets {
-	//	list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
-	//}
-	//fmt.Println(list)
-	//
-	//for _, data := range ms.CardSecrets {
-	//	list = append(list, &proto.SecretList{Id: uint32(data.Id), Title: data.Title})
-	//}
 
 	return list
 }
