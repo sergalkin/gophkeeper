@@ -18,7 +18,7 @@
     * [Delete secret](#delete-secret)
     * [Edit secret](#edit-secret)
     * [Get list of secret by provided type](#get-list-of-secret-by-provided-type)
-  * [Exit](#exit)
+    * [Exit](#exit)
 <!-- TOC -->
 
 
@@ -40,19 +40,19 @@
 
 ### Get list of secret type
 
-`secret-types typeId`
+`types`
 
 ### Store Login/Pass
 
-`create-auth-secret %title% %login% %pass%`
+`create-auth %title% %login% %pass%`
 
 ### Store Text
 
-`create-text-secret %title% %text%`
+`create-text %title% %text%`
 
 ### Store Card
 
-`create-card-secret %title% %cardNumber% %cvv% %dueDate%`
+`create-card %title% %cardNumber% %cvv% %dueDate%`
 
 ### Get secret
 
@@ -60,11 +60,11 @@
 
 ### Store binary secret
 
-`create-binary-secret %title% %absolutePath%`
+`create-binary %title% %absolutePath%`
 
 ### Get binary secret
 
-`get-binary-secret %id% %absolutePath%`
+`get-secret-binary %id% %absolutePath%`
 
 ### Delete secret
 
@@ -82,7 +82,7 @@
 
 ### Get list of secret by provided type
 
-`get-secret-list-by-type typeId`
+`get-secrets-by-type %typeId%`
 
 ### Exit
 

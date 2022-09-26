@@ -2,6 +2,11 @@ package model
 
 import "time"
 
+type SecretList struct {
+	Id    int
+	Title string
+}
+
 type LoginPassSecret struct {
 	Id         int
 	Title      string

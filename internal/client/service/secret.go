@@ -90,7 +90,7 @@ func (s *SecretClientService) GetSecret(id int) (interface{}, error) {
 	data, ok := s.storage.FindInStorage(id)
 
 	if ok {
-		fmt.Printf("Content:%+v\n", data)
+		//fmt.Printf("Content:%+v\n", data)
 		return data, nil
 	}
 
