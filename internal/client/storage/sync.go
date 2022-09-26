@@ -53,11 +53,7 @@ func (s *Sync) SyncTextData() error {
 	var list []model.TextSecret
 	for _, text := range texts.SecretLists {
 		id := int(text.Id)
-		m := model.TextSecret{
-			Id:         id,
-			Title:      text.Title,
-			RecordType: 2,
-		}
+		m := model.TextSecret{}
 
 		decoded, errDecode := s.cr.Decode(string(text.Content))
 		if errDecode != nil {
@@ -69,6 +65,7 @@ func (s *Sync) SyncTextData() error {
 			return errUnmarshal
 		}
 		m.Id = id
+		m.UpdatedAt = text.UpdatedAt.AsTime()
 
 		list = append(list, m)
 	}
@@ -88,11 +85,7 @@ func (s *Sync) SyncCardData() error {
 	var list []model.CardSecret
 	for _, card := range cards.SecretLists {
 		id := int(card.Id)
-		m := model.CardSecret{
-			Id:         int(card.Id),
-			Title:      card.Title,
-			RecordType: 4,
-		}
+		m := model.CardSecret{}
 
 		decoded, errDecode := s.cr.Decode(string(card.Content))
 		if errDecode != nil {
@@ -104,6 +97,7 @@ func (s *Sync) SyncCardData() error {
 			return errUnmarshal
 		}
 		m.Id = id
+		m.UpdatedAt = card.UpdatedAt.AsTime()
 
 		list = append(list, m)
 	}
@@ -124,11 +118,7 @@ func (s *Sync) SyncPassLoginData() error {
 	var list []model.LoginPassSecret
 	for _, sList := range lists.SecretLists {
 		id := int(sList.Id)
-		m := model.LoginPassSecret{
-			Id:         int(sList.Id),
-			Title:      sList.Title,
-			RecordType: int(sList.TypeId),
-		}
+		m := model.LoginPassSecret{}
 
 		decoded, errDecode := s.cr.Decode(string(sList.Content))
 		if errDecode != nil {
@@ -140,6 +130,7 @@ func (s *Sync) SyncPassLoginData() error {
 			return errUnmarshal
 		}
 		m.Id = id
+		m.UpdatedAt = sList.UpdatedAt.AsTime()
 
 		list = append(list, m)
 	}

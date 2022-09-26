@@ -172,18 +172,18 @@ func (mr *MockSecretServerStorageMockRecorder) DeleteSecret(ctx, secret interfac
 }
 
 // EditSecret mocks base method.
-func (m *MockSecretServerStorage) EditSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+func (m *MockSecretServerStorage) EditSecret(ctx context.Context, secret model.Secret, isForce bool) (model.Secret, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EditSecret", ctx, secret)
+	ret := m.ctrl.Call(m, "EditSecret", ctx, secret, isForce)
 	ret0, _ := ret[0].(model.Secret)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EditSecret indicates an expected call of EditSecret.
-func (mr *MockSecretServerStorageMockRecorder) EditSecret(ctx, secret interface{}) *gomock.Call {
+func (mr *MockSecretServerStorageMockRecorder) EditSecret(ctx, secret, isForce interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditSecret", reflect.TypeOf((*MockSecretServerStorage)(nil).EditSecret), ctx, secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditSecret", reflect.TypeOf((*MockSecretServerStorage)(nil).EditSecret), ctx, secret, isForce)
 }
 
 // GetListOfSecretByType mocks base method.

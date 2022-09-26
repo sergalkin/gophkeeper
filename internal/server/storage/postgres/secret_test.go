@@ -317,7 +317,7 @@ func TestSecretPostgresStorage_EditSecret(t *testing.T) {
 			tt.do()
 			s := &SecretPostgresStorage{conn: con}
 
-			got, err := s.EditSecret(tt.args.ctx, tt.args.secret)
+			got, err := s.EditSecret(tt.args.ctx, tt.args.secret, true)
 			if !tt.wantErr(t, err, fmt.Sprintf("EditSecret(%v, %v)", tt.args.ctx, tt.args.secret)) {
 				assert.Equal(t, []byte{1, 2}, got.Content)
 				assert.Equal(t, "Test new", got.Title)

@@ -11,6 +11,7 @@ import (
 
 	"github.com/sergalkin/gophkeeper/internal/server/model"
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
+	"github.com/sergalkin/gophkeeper/pkg/apperr"
 )
 
 var _ storage.SecretServerStorage = (*SecretPostgresStorage)(nil)
@@ -110,9 +111,15 @@ func (s *SecretPostgresStorage) DeleteSecret(ctx context.Context, secret model.S
 }
 
 // EditSecret - updates a model.Secret in database.
-func (s *SecretPostgresStorage) EditSecret(ctx context.Context, secret model.Secret) (model.Secret, error) {
+func (s *SecretPostgresStorage) EditSecret(ctx context.Context, secret model.Secret, isForce bool) (model.Secret, error) {
 	ctxWithTimeOut, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
+
+	ss, _ := s.GetSecret(ctx, secret)
+
+	if ss.UpdatedAt.Unix() != secret.UpdatedAt.Unix() && !isForce {
+		return secret, apperr.ErrUpdatedAtDoesntMatch
+	}
 
 	err := s.conn.QueryRow(ctxWithTimeOut, UpdateSecret, secret.Title, hex.EncodeToString(secret.Content),
 		time.Now(), secret.ID, secret.UserID,

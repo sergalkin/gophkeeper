@@ -29,7 +29,7 @@ type SecretServerStorage interface {
 	// DeleteSecret - deletes a model.Secret from storage.
 	DeleteSecret(ctx context.Context, secret model.Secret) (model.Secret, error)
 	// EditSecret - updates a model.Secret in storage.
-	EditSecret(ctx context.Context, secret model.Secret) (model.Secret, error)
+	EditSecret(ctx context.Context, secret model.Secret, isForce bool) (model.Secret, error)
 	// GetListOfSecretByType - returns a list of []model.Secret from storage.
 	GetListOfSecretByType(ctx context.Context, secretType model.SecretType, user model.User) ([]model.Secret, error)
 }

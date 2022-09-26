@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pb "github.com/sergalkin/gophkeeper/api/proto"
 	"github.com/sergalkin/gophkeeper/internal/server/middleware/auth"
@@ -22,6 +24,9 @@ import (
 	cryptmock "github.com/sergalkin/gophkeeper/pkg/crypt/mock"
 	jwtmock "github.com/sergalkin/gophkeeper/pkg/jwt/mock"
 )
+
+var loc, _ = time.LoadLocation("UTC")
+var now = time.Now().In(loc)
 
 func TestSecretGrpc_RegisterService(t *testing.T) {
 	ctl := gomock.NewController(t)
@@ -105,10 +110,10 @@ func TestSecretGrpc_EditSecret(t *testing.T) {
 	client, done := secretTestClient(t, ctl, uid)
 	defer close(done)
 
-	_, err := client.EditSecret(ctx, &pb.EditSecretRequest{Id: 1})
+	_, err := client.EditSecret(ctx, &pb.EditSecretRequest{Id: 1, IsForce: true, UpdatedAt: timestamppb.New(now)})
 	assert.NoError(t, err)
 
-	_, err = client.EditSecret(ctx, &pb.EditSecretRequest{Id: 0})
+	_, err = client.EditSecret(ctx, &pb.EditSecretRequest{Id: 0, IsForce: true, UpdatedAt: timestamppb.New(now)})
 	assert.Error(t, err)
 }
 
@@ -153,11 +158,11 @@ func secretTestClient(t *testing.T, ctl *gomock.Controller, uid uuid.UUID) (pb.S
 		Return(model.Secret{}, errors.New("test"))
 
 	secretStorageMock.EXPECT().
-		EditSecret(gomock.Any(), gomock.Eq(model.Secret{ID: 1, UserID: uid})).
+		EditSecret(gomock.Any(), gomock.Eq(model.Secret{ID: 1, UserID: uid, UpdatedAt: now}), gomock.Eq(true)).
 		AnyTimes().
 		Return(model.Secret{}, nil)
 	secretStorageMock.EXPECT().
-		EditSecret(gomock.Any(), gomock.Eq(model.Secret{ID: 0, UserID: uid})).
+		EditSecret(gomock.Any(), gomock.Eq(model.Secret{ID: 0, UserID: uid, UpdatedAt: now}), gomock.Eq(true)).
 		AnyTimes().
 		Return(model.Secret{}, errors.New("test"))
 

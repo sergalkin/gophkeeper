@@ -44,8 +44,13 @@ func main() {
 
 // executor - executes proper function based on entered text in terminal.
 func executor(s string) {
-	s = strings.TrimSpace(s)
-	setCommand := strings.Split(s, " ")
+	var isForce bool
+
+	setCommand, options := getCommandArgsAndOptions(s)
+	if options["force"] || options["f"] {
+		isForce = true
+	}
+
 	switch setCommand[0] {
 	case "login":
 		switch len(setCommand) - 1 {
@@ -98,6 +103,8 @@ func executor(s string) {
 			}
 		}
 
+		fmt.Println("User successfully created. You are logged in.")
+
 		return
 	case "delete-user":
 		if err := clientApp.UserService.Delete(); err != nil {
@@ -110,6 +117,8 @@ func executor(s string) {
 		clientApp.Cron.Stop()
 
 		clientApp.Storage.ResetStorage()
+
+		fmt.Println("You successfully logged out")
 		return
 	case "secret-types":
 		secrets, err := clientApp.SecretTypeService.List()
@@ -261,7 +270,7 @@ func executor(s string) {
 			return
 		}
 
-		if err := clientApp.SecretService.GetSecret(id); err != nil {
+		if _, err := clientApp.SecretService.GetSecret(id); err != nil {
 			switch status.Code(err) {
 			case codes.NotFound:
 				fmt.Println("Secret not found")
@@ -315,9 +324,11 @@ func executor(s string) {
 
 		return
 	case "edit-secret":
-		var recordType int
-		var id int
-		var converted []byte
+		var (
+			recordType int
+			id         int
+			converted  []byte
+		)
 
 		numArgs := len(setCommand) - 1
 		if numArgs >= 3 {
@@ -420,8 +431,19 @@ func executor(s string) {
 			return
 		}
 
-		if err := clientApp.SecretService.EditSecret(id, setCommand[2], recordType, string(converted)); err != nil {
-			fmt.Println(err)
+		if err := clientApp.SecretService.EditSecret(id, setCommand[3], recordType, string(converted), isForce); err != nil {
+			st, _ := status.FromError(err)
+
+			fmt.Println(st.Message())
+
+			if st.Code() == codes.FailedPrecondition {
+				fmt.Println("starting re-sync")
+
+				clientApp.Syncer.SyncAll()
+
+				fmt.Println("re-sync ended")
+			}
+
 			return
 		}
 
@@ -485,4 +507,30 @@ func completer(d prompt.Document) []prompt.Suggest {
 	}
 
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
+}
+
+func getCommandArgsAndOptions(s string) ([]string, map[string]bool) {
+	s = strings.TrimSpace(s)
+
+	setCommand := strings.Split(s, " ")
+
+	l := len(setCommand)
+
+	filtered := make([]string, 0, l)
+	options := make(map[string]bool)
+
+	for i := 0; i < len(setCommand); i++ {
+		if strings.HasPrefix(setCommand[i], "-") {
+			opt := strings.TrimPrefix(setCommand[i], "--")
+			opt = strings.TrimPrefix(opt, "-")
+
+			optSplited := strings.Split(opt, "=")
+			options[optSplited[0]] = true
+
+			continue
+		}
+		filtered = append(filtered, setCommand[i])
+	}
+
+	return filtered, options
 }

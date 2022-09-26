@@ -16,6 +16,7 @@ import (
 	"github.com/sergalkin/gophkeeper/internal/server/middleware/auth"
 	"github.com/sergalkin/gophkeeper/internal/server/model"
 	"github.com/sergalkin/gophkeeper/internal/server/storage"
+	"github.com/sergalkin/gophkeeper/pkg/apperr"
 )
 
 type SecretGrpc struct {
@@ -133,17 +134,21 @@ func (s *SecretGrpc) DeleteSecret(ctx context.Context, in *pb.DeleteSecretReques
 func (s *SecretGrpc) EditSecret(ctx context.Context, in *pb.EditSecretRequest) (*pb.EditSecretResponse, error) {
 	token := ctx.Value(auth.JwtTokenCtx{}).(string)
 	secret := model.Secret{
-		ID:      int(in.Id),
-		UserID:  uuid.MustParse(token),
-		Title:   in.Title,
-		TypeID:  int(in.Type),
-		Content: in.Content,
+		ID:        int(in.Id),
+		UserID:    uuid.MustParse(token),
+		Title:     in.Title,
+		TypeID:    int(in.Type),
+		Content:   in.Content,
+		UpdatedAt: in.UpdatedAt.AsTime(),
 	}
 
-	updatedSecret, err := s.storage.EditSecret(ctx, secret)
+	updatedSecret, err := s.storage.EditSecret(ctx, secret, in.IsForce)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, err.Error())
+		}
+		if errors.Is(err, apperr.ErrUpdatedAtDoesntMatch) {
+			return nil, status.Error(codes.FailedPrecondition, err.Error())
 		}
 
 		return nil, status.Error(codes.Internal, err.Error())
