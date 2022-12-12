@@ -1,0 +1,45 @@
+version: '3.9'
+services:
+  builder:
+    container_name: ${CONTAINER_NAME}_builder
+    build:
+      context: ../../
+      dockerfile: build/package/builder//Dockerfile
+    volumes:
+      - ../../:/app
+
+  server:
+    container_name: ${CONTAINER_NAME}_watcher_and_server
+    restart: unless-stopped
+    build:
+      context: ../../
+      dockerfile: build/package/builder/DockerfileDev
+    depends_on:
+      - pgsql
+    environment:
+      IS_Prod: ${IS_PROD}
+      SERVER_ADDRESS: ${SERVER_ADDRESS}
+      SERVER_PORT: ${SERVER_PORT}
+      LOG_PATH: ${LOG_PATH}
+      DSN: ${DSN}
+    ports:
+      - 8080:${SERVER_PORT}
+    volumes:
+      - ../..:/app
+
+  pgsql:
+    image: postgres
+    restart: unless-stopped
+    container_name: ${CONTAINER_NAME}_postgres
+    environment:
+      TZ: ${TIMEZONE}
+      PGTZ: ${TIMEZONE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - ../../.tmp/pgsql:/var/lib/postgresql/data/
+      - ./pgsql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
